@@ -1,3 +1,0 @@
-This package uses RelaxTools.xlam from RelaxTools/RelaxTools-Addin and replaces only customUI/customUI.xml to expose a selected subset of Ribbon commands.
-RelaxTools source is MIT licensed. The original repository states that RelaxTools.xlam is the RelaxTools main body and Source is included.
-Repository: https://github.com/RelaxTools/RelaxTools-Addin
