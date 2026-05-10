@@ -1,37 +1,27 @@
-# DExcelAssist v119 Installer
+# DExcelAssist Installer v158
 
-DExcelAssistのインストーラ版です。
+## v158 修正内容
 
-## 主な変更
+- バッチファイルの選択肢を日本語化しました。
+- バッチメニューから「Excel強制終了」を削除しました。
+- 勤怠取得処理、対象者設定、ログイン情報保存、複数対象者の一括取得処理は変更していません。
 
-- アップデート確認は、GitHub main上の `DExcelAssistInstaller.zip` をダウンロードしてインストーラを起動する方式に変更しました。
-- `DExcelAssistAppEvents` はインストール時にクラスモジュールとして生成する方式に変更し、VBEでヘッダーが通常モジュールに混入する問題を回避します。
-- 他のExcelアドインは削除しません。
+## 実行方法
 
-## インストール
+1. Excelをすべて閉じます。
+2. `DExcelAssist.bat` を実行します。
+3. `1: インストール / 修復` を選択します。
 
-1. Excelをすべて閉じる
-2. `DExcelAssist.bat` を実行
-3. `1: インストール/修復` を実行
+## バッチメニュー
 
-## GitHub mainブランチへ置くもの
-
-`5: リリース用ファイル作成` で作成される `_release/main_branch_upload` の中身だけを main ブランチ直下に配置してください。
-
-- VERSION.txt
-- version.json
-- DExcelAssistInstaller.zip
-- README.md
-
-
-## リリース用ファイル作成
-
-DExcelAssist.bat を実行し、`5: リリース用ファイル作成` を選択すると、GitHub main ブランチ直下に配置するファイル一式が `_release/main_branch_upload` に作成されます。
-
-コマンドで作成する場合は以下も利用できます。
-
-```bat
-DExcelAssist.bat /release
+```text
+1: インストール / 修復
+2: 診断
+3: アンインストール
+4: 配布ファイル作成
+0: 終了
 ```
 
-main ブランチには `_release/main_branch_upload` の中身だけを配置してください。
+## 注意
+
+Excelの強制終了メニューは削除しています。インストール前にExcelを閉じる必要がある場合は、手動で閉じてください。
