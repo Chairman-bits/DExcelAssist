@@ -7,7 +7,7 @@ setlocal
 cd /d "%~dp0"
 
 
-echo Starting DExcelAssist v99 Unified Ribbon...
+echo Starting DExcelAssist v112 Unified Ribbon...
 
 
 echo.

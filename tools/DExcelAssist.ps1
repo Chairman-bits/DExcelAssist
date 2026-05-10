@@ -6,6 +6,8 @@ $Payload = Join-Path $Root "payload\DExcelAssist.xlam"
 
 $ExtraBas = Join-Path $Root "tools\DExcelAssistExtra.bas"
 
+$EventsCls = Join-Path $Root "tools\DExcelAssistAppEvents.cls"
+
 $AddInsDir = Join-Path $env:APPDATA "Microsoft\AddIns"
 
 $XLStartDir = Join-Path $env:APPDATA "Microsoft\Excel\XLSTART"
@@ -96,7 +98,7 @@ function Xlam-HasSelectedUi([string]$path){
 
     try{ $xml=$sr.ReadToEnd() } finally { $sr.Close() }
 
-    return ($xml -match 'tab id="DExcelAssistTab"' -and $xml -match 'label="DExcelAssist"' -and $xml -notmatch 'RelaxToolsTab' -and $xml -notmatch 'RelaxShapesTab' -and $xml -notmatch 'RelaxAppsTab' -and $xml -match 'SelectedFavoriteGroup' -and $xml -match 'hotkey' -and $xml -match 'searchFusen' -and $xml -match 'DExcelAssistExtraGroup' -and $xml -match 'dxaHolidaySheet' -and $xml -match 'dxaAutoFitRows' -and $xml -match 'dxaCreateSheetIndex' -and $xml -match 'BacklogTab' -and $xml -match 'dxaBacklogGroupByParent' -and $xml -match 'dxaExportVbaWithFolderPicker' -and $xml -match 'dxaCreateFolderTreeWithFolderPicker' -and $xml -match 'dxaCreateFileList')
+    return ($xml -match 'tab id="DExcelAssistTab"' -and $xml -match 'label="DExcelAssist"' -and $xml -notmatch 'RelaxToolsTab' -and $xml -notmatch 'RelaxShapesTab' -and $xml -notmatch 'RelaxAppsTab' -and $xml -match 'SelectedFavoriteGroup' -and $xml -match 'hotkey' -and $xml -match 'searchFusen' -and $xml -match 'DExcelAssistExtraGroup' -and $xml -match 'dxaHolidaySheet' -and $xml -match 'dxaAutoFitRows' -and $xml -match 'dxaCreateSheetIndex' -and $xml -match 'BacklogTab' -and $xml -match 'dxaBacklogGroupByParent' -and $xml -notmatch 'dxaBacklogFormatGantt' -and $xml -notmatch 'dxaBacklogCreateGanttSummary' -and $xml -notmatch 'dxaBacklogCreateDelayList' -and $xml -notmatch 'dxaBacklogCreateMeetingView' -and $xml -notmatch 'dxaBacklogCreateAssigneeLoad' -and $xml -match 'dxaExportVbaWithFolderPicker' -and $xml -match 'dxaCreateFolderTreeWithFolderPicker' -and $xml -match 'dxaCreateFileList' -and $xml -match 'dxaCreateChangeHistory' -and $xml -match 'dxaCheckNotationVariants' -and $xml -match 'dxaDiagnoseHeavyWorkbook' -and $xml -match 'dxaImportTimecardNormalWork' -and $xml -match 'dxaImportTimecardShiftWork')
 
   } finally { $zip.Dispose() }
 
@@ -150,6 +152,8 @@ function Import-ExtraVbaModule([string]$xlamPath){
 
   if(!(Test-Path $ExtraBas)){ throw "tools\DExcelAssistExtra.bas が見つかりません。" }
 
+  if(!(Test-Path $EventsCls)){ throw "tools\DExcelAssistAppEvents.cls が見つかりません。" }
+
   Enable-ExcelVbomAndTrustedLocation
 
   $xl = $null
@@ -172,7 +176,7 @@ function Import-ExtraVbaModule([string]$xlamPath){
 
       $comp=$vbproj.VBComponents.Item($i)
 
-      if($comp.Name -eq 'DExcelAssistExtra'){
+      if($comp.Name -eq 'DExcelAssistExtra' -or $comp.Name -eq 'DExcelAssistAppEvents' -or $comp.Name -like 'DExcelAssistAppEvents*'){
 
         $vbproj.VBComponents.Remove($comp)
 
@@ -181,6 +185,8 @@ function Import-ExtraVbaModule([string]$xlamPath){
     }
 
     [void]$vbproj.VBComponents.Import($ExtraBas)
+
+    [void]$vbproj.VBComponents.Import($EventsCls)
 
     $wb.Save()
 
@@ -428,13 +434,14 @@ function Install-SelectedRelaxTools {
 
 function Diagnose {
 
-  Write-Host "==== DExcelAssist v99 統合リボン 診断 ===="
+  Write-Host "==== DExcelAssist v112 統合リボン 診断 ===="
 
   Write-Host "Root: $Root"
 
   Write-Host "Payload: $Payload exists=$(Test-Path $Payload)"
 
   Write-Host "ExtraBas: $ExtraBas exists=$(Test-Path $ExtraBas)"
+  Write-Host "EventsCls: $EventsCls exists=$(Test-Path $EventsCls)"
 
   Write-Host "Addin: $AddinPath exists=$(Test-Path $AddinPath) size=$((Get-Item $AddinPath -ErrorAction SilentlyContinue).Length) selectedUI=$(if(Test-Path $AddinPath){Xlam-HasSelectedUi $AddinPath}else{$false})"
 
@@ -622,6 +629,8 @@ Version: $version
 
 - tools/DExcelAssistExtra.bas
 
+- tools/DExcelAssistAppEvents.cls
+
 - licenses/RelaxTools_LICENSE_NOTE.txt
 
 
@@ -676,7 +685,7 @@ while($true){
 
   Write-Host ""
 
-  Write-Host "DExcelAssist v99 統合リボン"
+  Write-Host "DExcelAssist v112 統合リボン"
 
   Write-Host "1: インストール/修復（Excel強制終了後、DExcelAssistのみ置換）"
 
