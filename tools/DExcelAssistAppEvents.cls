@@ -9,19 +9,23 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Public WithEvents App As Excel.Application
+Private WithEvents mApp As Excel.Application
 
-Private Sub App_WorkbookOpen(ByVal Wb As Workbook)
+Public Sub Init(ByVal targetApp As Excel.Application)
+    Set mApp = targetApp
+End Sub
+
+Private Sub mApp_WorkbookOpen(ByVal Wb As Workbook)
     On Error Resume Next
     DxaEnsureSnapshotForWorkbook Wb
 End Sub
 
-Private Sub App_WorkbookActivate(ByVal Wb As Workbook)
+Private Sub mApp_WorkbookActivate(ByVal Wb As Workbook)
     On Error Resume Next
     DxaEnsureSnapshotForWorkbook Wb
 End Sub
 
-Private Sub App_WorkbookBeforeClose(ByVal Wb As Workbook, Cancel As Boolean)
+Private Sub mApp_WorkbookBeforeClose(ByVal Wb As Workbook, Cancel As Boolean)
     On Error Resume Next
     DxaDeleteSnapshotForWorkbook Wb
 End Sub

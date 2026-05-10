@@ -1598,8 +1598,10 @@ End Sub
 Public Sub DxaInitChangeHistoryEvents()
     On Error Resume Next
     If Len(gDxaSessionId) = 0 Then gDxaSessionId = Format$(Now, "yyyymmddhhnnss") & "_" & CStr(Int(Rnd() * 1000000))
-    If gDxaEvents Is Nothing Then Set gDxaEvents = New DExcelAssistAppEvents
-    Set gDxaEvents.App = Application
+    If gDxaEvents Is Nothing Then
+        Set gDxaEvents = New DExcelAssistAppEvents
+        gDxaEvents.Init Application
+    End If
 
     DxaCleanupOldChangeSnapshots
 
@@ -4006,3 +4008,311 @@ Private Function DxaWeekdayJa(ByVal d As Date) As String
     DxaWeekdayJa = Mid$("日月火水木金土", Weekday(d, vbSunday), 1)
 End Function
 
+
+
+' DExcelAssist v114
+' アクティブブックの外部データ、クエリ、ピボットテーブル、数式を更新します。
+Public Sub DxaRefreshWorkbook(ByVal control As Object)
+    On Error GoTo EH
+
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim pt As PivotTable
+    Dim qt As QueryTable
+    Dim lo As ListObject
+    Dim refreshedPivotCount As Long
+    Dim refreshedQueryCount As Long
+
+    If Application.Workbooks.Count = 0 Then
+        MsgBox "更新対象のブックが開かれていません。", vbExclamation, "DExcelAssist 更新"
+        Exit Sub
+    End If
+
+    Set wb = ActiveWorkbook
+    If wb Is Nothing Then
+        MsgBox "更新対象のブックを取得できませんでした。", vbExclamation, "DExcelAssist 更新"
+        Exit Sub
+    End If
+
+    If StrComp(wb.Name, ThisWorkbook.Name, vbTextCompare) = 0 Then
+        MsgBox "DExcelAssist.xlamではなく、更新したいブックをアクティブにしてから実行してください。", vbExclamation, "DExcelAssist 更新"
+        Exit Sub
+    End If
+
+    Application.ScreenUpdating = False
+    Application.StatusBar = "DExcelAssist: ブックを更新しています..."
+
+    On Error Resume Next
+    wb.RefreshAll
+    Application.CalculateUntilAsyncQueriesDone
+    On Error GoTo EH
+
+    For Each ws In wb.Worksheets
+        For Each qt In ws.QueryTables
+            On Error Resume Next
+            qt.Refresh BackgroundQuery:=False
+            If Err.Number = 0 Then refreshedQueryCount = refreshedQueryCount + 1
+            Err.Clear
+            On Error GoTo EH
+        Next qt
+
+        For Each lo In ws.ListObjects
+            If Not lo.QueryTable Is Nothing Then
+                On Error Resume Next
+                lo.QueryTable.Refresh BackgroundQuery:=False
+                If Err.Number = 0 Then refreshedQueryCount = refreshedQueryCount + 1
+                Err.Clear
+                On Error GoTo EH
+            End If
+        Next lo
+
+        For Each pt In ws.PivotTables
+            On Error Resume Next
+            pt.RefreshTable
+            If Err.Number = 0 Then refreshedPivotCount = refreshedPivotCount + 1
+            Err.Clear
+            On Error GoTo EH
+        Next pt
+    Next ws
+
+    Application.CalculateFull
+
+    Application.StatusBar = False
+    Application.ScreenUpdating = True
+
+    MsgBox "更新が完了しました。" & vbCrLf & _
+           "対象ブック: " & wb.Name & vbCrLf & _
+           "更新したクエリ/テーブル: " & refreshedQueryCount & vbCrLf & _
+           "更新したピボットテーブル: " & refreshedPivotCount, _
+           vbInformation, "DExcelAssist 更新"
+    Exit Sub
+
+EH:
+    Application.StatusBar = False
+    Application.ScreenUpdating = True
+    MsgBox "更新中にエラーが発生しました。" & vbCrLf & _
+           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DExcelAssist 更新"
+End Sub
+
+
+
+' DExcelAssist v115
+' GitHub mainブランチのVERSION.txtを確認し、現在より新しい場合だけ確認ダイアログを表示してアップデートします。
+Public Sub DxaCheckDExcelAssistUpdate(ByVal control As Object)
+    On Error GoTo EH
+
+    Dim currentVersion As String
+    Dim latestVersion As String
+
+    currentVersion = DxaNormalizeVersionText(DxaGetCurrentVersionText())
+    latestVersion = DxaNormalizeVersionText(DxaGetLatestVersionTextFromGitHub())
+
+    If Len(Trim$(latestVersion)) = 0 Then
+        MsgBox "GitHub mainブランチのVERSION.txtを取得できませんでした。" & vbCrLf & _
+               "ネットワーク接続、またはGitHub mainブランチの配置を確認してください。", _
+               vbExclamation, "DExcelAssist アップデート確認"
+        Exit Sub
+    End If
+
+    If DxaCompareVersionText(currentVersion, latestVersion) >= 0 Then
+        MsgBox "DExcelAssistは最新です。" & vbCrLf & vbCrLf & _
+               "現在のバージョン: " & currentVersion & vbCrLf & _
+               "最新のバージョン: " & latestVersion, _
+               vbInformation, "DExcelAssist アップデート確認"
+        Exit Sub
+    End If
+
+    Dim answer As VbMsgBoxResult
+    answer = MsgBox("新しいDExcelAssistが見つかりました。" & vbCrLf & vbCrLf & _
+                    "現在のバージョン: " & currentVersion & vbCrLf & _
+                    "最新のバージョン: " & latestVersion & vbCrLf & vbCrLf & _
+                    "インストーラをダウンロードしてアップデートしますか？" & vbCrLf & _
+                    "アップデート中はExcelを終了します。", _
+                    vbYesNo + vbQuestion, "DExcelAssist アップデート確認")
+    If answer <> vbYes Then Exit Sub
+
+    Dim wb As Workbook
+    For Each wb In Application.Workbooks
+        If StrComp(wb.Name, ThisWorkbook.Name, vbTextCompare) <> 0 Then
+            If wb.Saved = False Then
+                MsgBox "保存されていないブックがあります。" & vbCrLf & _
+                       "アップデートではExcelを終了するため、先にすべて保存してから再実行してください。" & vbCrLf & _
+                       "対象: " & wb.Name, vbExclamation, "DExcelAssist アップデート確認"
+                Exit Sub
+            End If
+        End If
+    Next wb
+
+    Dim tempDir As String
+    Dim zipPath As String
+    Dim psCmd As String
+    Dim sh As Object
+
+    tempDir = Environ$("TEMP") & "\DExcelAssistInstaller_" & Format$(Now, "yyyymmdd_hhnnss")
+    zipPath = tempDir & "\DExcelAssistInstaller.zip"
+
+    psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command " & _
+            DxaQuoteForCommand("$ErrorActionPreference='Stop'; " & _
+            "New-Item -ItemType Directory -Force -Path " & DxaPsQuote(tempDir) & " | Out-Null; " & _
+            "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip' -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; " & _
+            "Expand-Archive -Path " & DxaPsQuote(zipPath) & " -DestinationPath " & DxaPsQuote(tempDir) & " -Force; " & _
+            "$bat = Get-ChildItem -Path " & DxaPsQuote(tempDir) & " -Recurse -Filter 'DExcelAssist.bat' | Select-Object -First 1; " & _
+            "if($null -eq $bat){ throw 'DExcelAssist.bat が見つかりません。' }; " & _
+            "Start-Process -FilePath $bat.FullName -ArgumentList '/install' -WorkingDirectory $bat.DirectoryName")
+
+    Set sh = CreateObject("WScript.Shell")
+    sh.Run psCmd, 0, False
+
+    MsgBox "DExcelAssistのインストーラを起動しました。" & vbCrLf & _
+           "このあとExcelを終了します。インストール完了後にExcelを再起動してください。", _
+           vbInformation, "DExcelAssist アップデート確認"
+
+    Application.DisplayAlerts = False
+    Application.Quit
+    Exit Sub
+
+EH:
+    MsgBox "DExcelAssistのアップデート確認中にエラーが発生しました。" & vbCrLf & _
+           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DExcelAssist アップデート確認"
+End Sub
+
+' 旧リボンIDとの互換用。現在のリボンからは呼び出しません。
+Public Sub DxaUpdateDExcelAssist(ByVal control As Object)
+    DxaCheckDExcelAssistUpdate control
+End Sub
+
+Private Function DxaGetCurrentVersionText() As String
+    On Error GoTo Fallback
+
+    Dim sh As Object
+    Set sh = CreateObject("WScript.Shell")
+    DxaGetCurrentVersionText = Trim$(CStr(sh.RegRead("HKCU\Software\DExcelAssist\LocalVersion")))
+    If Len(DxaGetCurrentVersionText) > 0 Then Exit Function
+
+Fallback:
+    On Error Resume Next
+    Dim installRoot As String
+    Dim fso As Object
+    Dim ts As Object
+
+    installRoot = DxaReadInstallRoot()
+    If Len(installRoot) > 0 Then
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        If fso.FileExists(installRoot & "\VERSION.txt") Then
+            Set ts = fso.OpenTextFile(installRoot & "\VERSION.txt", 1, False)
+            DxaGetCurrentVersionText = Trim$(CStr(ts.ReadAll))
+            ts.Close
+        End If
+    End If
+
+    If Len(DxaGetCurrentVersionText) = 0 Then DxaGetCurrentVersionText = "v0.0.0"
+End Function
+
+Private Function DxaGetLatestVersionTextFromGitHub() As String
+    On Error GoTo EH
+
+    Dim http As Object
+    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
+    http.Open "GET", "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/VERSION.txt", False
+    http.SetTimeouts 5000, 5000, 10000, 10000
+    http.Send
+
+    If CLng(http.Status) <> 200 Then
+        DxaGetLatestVersionTextFromGitHub = vbNullString
+    Else
+        DxaGetLatestVersionTextFromGitHub = Trim$(CStr(http.ResponseText))
+    End If
+    Exit Function
+
+EH:
+    DxaGetLatestVersionTextFromGitHub = vbNullString
+End Function
+
+Private Function DxaNormalizeVersionText(ByVal versionText As String) As String
+    Dim s As String
+    Dim i As Long
+    Dim ch As String
+    Dim result As String
+    Dim started As Boolean
+
+    s = Trim$(CStr(versionText))
+    s = Replace(s, ChrW$(&HFEFF), vbNullString)
+    s = Replace(s, ChrW$(&HFFFD), vbNullString)
+    s = Replace(s, "?", vbNullString)
+
+    For i = 1 To Len(s)
+        ch = Mid$(s, i, 1)
+        If Not started Then
+            If ch = "v" Or ch = "V" Or (ch >= "0" And ch <= "9") Then
+                started = True
+            End If
+        End If
+
+        If started Then
+            If ch = "v" Or ch = "V" Or ch = "." Or ch = "-" Or ch = "_" Or (ch >= "0" And ch <= "9") Then
+                result = result & ch
+            ElseIf Len(result) > 0 Then
+                Exit For
+            End If
+        End If
+    Next i
+
+    result = Trim$(result)
+    If Len(result) = 0 Then result = "v0.0.0"
+    DxaNormalizeVersionText = result
+End Function
+
+Private Function DxaCompareVersionText(ByVal currentVersion As String, ByVal latestVersion As String) As Long
+    Dim i As Long
+    Dim a As Long
+    Dim b As Long
+
+    For i = 0 To 3
+        a = DxaGetVersionPart(currentVersion, i)
+        b = DxaGetVersionPart(latestVersion, i)
+        If a < b Then
+            DxaCompareVersionText = -1
+            Exit Function
+        ElseIf a > b Then
+            DxaCompareVersionText = 1
+            Exit Function
+        End If
+    Next i
+
+    DxaCompareVersionText = 0
+End Function
+
+Private Function DxaGetVersionPart(ByVal versionText As String, ByVal index As Long) As Long
+    Dim s As String
+    Dim parts As Variant
+
+    s = LCase$(DxaNormalizeVersionText(versionText))
+    If Left$(s, 1) = "v" Then s = Mid$(s, 2)
+    s = Replace(s, "_", "-")
+    If InStr(1, s, "-", vbTextCompare) > 0 Then s = Left$(s, InStr(1, s, "-", vbTextCompare) - 1)
+
+    parts = Split(s, ".")
+    If index <= UBound(parts) Then
+        DxaGetVersionPart = CLng(Val(CStr(parts(index))))
+    Else
+        DxaGetVersionPart = 0
+    End If
+End Function
+
+Private Function DxaReadInstallRoot() As String
+    On Error GoTo EH
+    Dim sh As Object
+    Set sh = CreateObject("WScript.Shell")
+    DxaReadInstallRoot = CStr(sh.RegRead("HKCU\Software\DExcelAssist\InstallRoot"))
+    Exit Function
+EH:
+    DxaReadInstallRoot = vbNullString
+End Function
+
+Private Function DxaPsQuote(ByVal value As String) As String
+    DxaPsQuote = "'" & Replace(value, "'", "''") & "'"
+End Function
+
+Private Function DxaQuoteForCommand(ByVal value As String) As String
+    DxaQuoteForCommand = Chr$(34) & Replace(value, Chr$(34), Chr$(34) & Chr$(34)) & Chr$(34)
+End Function

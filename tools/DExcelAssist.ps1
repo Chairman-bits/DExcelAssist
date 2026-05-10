@@ -1,4 +1,8 @@
-﻿$ErrorActionPreference = "Stop"
+﻿param(
+  [string]$Action = ""
+)
+
+$ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
@@ -98,7 +102,7 @@ function Xlam-HasSelectedUi([string]$path){
 
     try{ $xml=$sr.ReadToEnd() } finally { $sr.Close() }
 
-    return ($xml -match 'tab id="DExcelAssistTab"' -and $xml -match 'label="DExcelAssist"' -and $xml -notmatch 'RelaxToolsTab' -and $xml -notmatch 'RelaxShapesTab' -and $xml -notmatch 'RelaxAppsTab' -and $xml -match 'SelectedFavoriteGroup' -and $xml -match 'hotkey' -and $xml -match 'searchFusen' -and $xml -match 'DExcelAssistExtraGroup' -and $xml -match 'dxaHolidaySheet' -and $xml -match 'dxaAutoFitRows' -and $xml -match 'dxaCreateSheetIndex' -and $xml -match 'BacklogTab' -and $xml -match 'dxaBacklogGroupByParent' -and $xml -notmatch 'dxaBacklogFormatGantt' -and $xml -notmatch 'dxaBacklogCreateGanttSummary' -and $xml -notmatch 'dxaBacklogCreateDelayList' -and $xml -notmatch 'dxaBacklogCreateMeetingView' -and $xml -notmatch 'dxaBacklogCreateAssigneeLoad' -and $xml -match 'dxaExportVbaWithFolderPicker' -and $xml -match 'dxaCreateFolderTreeWithFolderPicker' -and $xml -match 'dxaCreateFileList' -and $xml -match 'dxaCreateChangeHistory' -and $xml -match 'dxaCheckNotationVariants' -and $xml -match 'dxaDiagnoseHeavyWorkbook' -and $xml -match 'dxaImportTimecardNormalWork' -and $xml -match 'dxaImportTimecardShiftWork')
+    return ($xml -match 'tab id="DExcelAssistTab"' -and $xml -match 'label="DExcelAssist"' -and $xml -notmatch 'RelaxToolsTab' -and $xml -notmatch 'RelaxShapesTab' -and $xml -notmatch 'RelaxAppsTab' -and $xml -match 'SelectedFavoriteGroup' -and $xml -match 'hotkey' -and $xml -match 'searchFusen' -and $xml -match 'DExcelAssistExtraGroup' -and $xml -notmatch 'dxaRefreshWorkbook' -and $xml -match 'dxaCheckDExcelAssistUpdate' -and $xml -match 'dxaHolidaySheet' -and $xml -match 'dxaAutoFitRows' -and $xml -match 'dxaCreateSheetIndex' -and $xml -match 'BacklogTab' -and $xml -match 'dxaBacklogGroupByParent' -and $xml -notmatch 'dxaBacklogFormatGantt' -and $xml -notmatch 'dxaBacklogCreateGanttSummary' -and $xml -notmatch 'dxaBacklogCreateDelayList' -and $xml -notmatch 'dxaBacklogCreateMeetingView' -and $xml -notmatch 'dxaBacklogCreateAssigneeLoad' -and $xml -match 'dxaExportVbaWithFolderPicker' -and $xml -match 'dxaCreateFolderTreeWithFolderPicker' -and $xml -match 'dxaCreateFileList' -and $xml -match 'dxaCreateChangeHistory' -and $xml -match 'dxaCheckNotationVariants' -and $xml -match 'dxaDiagnoseHeavyWorkbook' -and $xml -match 'dxaImportTimecardNormalWork' -and $xml -match 'dxaImportTimecardShiftWork')
 
   } finally { $zip.Dispose() }
 
@@ -148,11 +152,49 @@ function Save-DExcelAssistSettings {
 
 
 
+
+function Add-DExcelAssistEventsClass($vbproj){
+
+  for($i=$vbproj.VBComponents.Count; $i -ge 1; $i--){
+    $comp=$vbproj.VBComponents.Item($i)
+    if($comp.Name -eq 'DExcelAssistAppEvents' -or $comp.Name -like 'DExcelAssistAppEvents*'){
+      $vbproj.VBComponents.Remove($comp)
+    }
+  }
+
+  $classCode = @'
+Option Explicit
+
+Private WithEvents mApp As Excel.Application
+
+Public Sub Init(ByVal targetApp As Excel.Application)
+    Set mApp = targetApp
+End Sub
+
+Private Sub mApp_WorkbookOpen(ByVal Wb As Workbook)
+    On Error Resume Next
+    DxaEnsureSnapshotForWorkbook Wb
+End Sub
+
+Private Sub mApp_WorkbookActivate(ByVal Wb As Workbook)
+    On Error Resume Next
+    DxaEnsureSnapshotForWorkbook Wb
+End Sub
+
+Private Sub mApp_WorkbookBeforeClose(ByVal Wb As Workbook, Cancel As Boolean)
+    On Error Resume Next
+    DxaDeleteSnapshotForWorkbook Wb
+End Sub
+'@
+
+  $comp = $vbproj.VBComponents.Add(2)
+  $comp.Name = 'DExcelAssistAppEvents'
+  $comp.CodeModule.AddFromString($classCode)
+}
+
 function Import-ExtraVbaModule([string]$xlamPath){
 
   if(!(Test-Path $ExtraBas)){ throw "tools\DExcelAssistExtra.bas が見つかりません。" }
-
-  if(!(Test-Path $EventsCls)){ throw "tools\DExcelAssistAppEvents.cls が見つかりません。" }
 
   Enable-ExcelVbomAndTrustedLocation
 
@@ -186,7 +228,7 @@ function Import-ExtraVbaModule([string]$xlamPath){
 
     [void]$vbproj.VBComponents.Import($ExtraBas)
 
-    [void]$vbproj.VBComponents.Import($EventsCls)
+    Add-DExcelAssistEventsClass $vbproj
 
     $wb.Save()
 
@@ -434,7 +476,7 @@ function Install-SelectedRelaxTools {
 
 function Diagnose {
 
-  Write-Host "==== DExcelAssist v112 統合リボン 診断 ===="
+  Write-Host "==== DExcelAssist v119 統合リボン 診断 ===="
 
   Write-Host "Root: $Root"
 
@@ -548,124 +590,295 @@ function Set-VersionFile([string]$dir,[string]$version){
 function Create-ReleaseFiles {
 
   $version = Read-ReleaseVersion
-
   if([string]::IsNullOrWhiteSpace($version)){ $version = "v0.0.0" }
-
   $safeVersion = $version -replace '[^0-9A-Za-z._-]','_'
 
   $releaseDir = Join-Path $Root "_release"
-
   $uploadDir = Join-Path $releaseDir "main_branch_upload"
-
   $stageParent = Join-Path $releaseDir "_stage"
-
-  $stageRoot = Join-Path $stageParent "DExcelAssistSafeInstaller_$safeVersion"
+  $stageRoot = Join-Path $stageParent "DExcelAssistInstaller_$safeVersion"
 
   if(Test-Path $releaseDir){ Remove-Item $releaseDir -Recurse -Force -ErrorAction SilentlyContinue }
-
   New-Item -ItemType Directory -Force -Path $releaseDir,$uploadDir,$stageRoot | Out-Null
 
-
-
   $items = @('DExcelAssist.bat','README.md','VERSION.txt','payload','tools','licenses')
-
   foreach($it in $items){
-
     $src = Join-Path $Root $it
-
-    if(Test-Path $src){
-
-      Copy-Item $src (Join-Path $stageRoot $it) -Recurse -Force
-
-      Copy-Item $src (Join-Path $uploadDir $it) -Recurse -Force
-
-    }
-
+    if(Test-Path $src){ Copy-Item $src (Join-Path $stageRoot $it) -Recurse -Force }
   }
 
-
-
-  # バッチ実行者が指定したバージョンを、配布物とmainブランチアップロード用ファイルへ反映します。
-
   Set-VersionFile $Root $version
-
   Set-VersionFile $stageRoot $version
 
-  Set-VersionFile $uploadDir $version
+  $installerZip = Join-Path $uploadDir "DExcelAssistInstaller.zip"
+  if(Test-Path $installerZip){ Remove-Item $installerZip -Force }
+  Compress-Archive -Path $stageRoot -DestinationPath $installerZip -Force
 
+  Set-Content -Path (Join-Path $uploadDir "VERSION.txt") -Value $version -Encoding UTF8
+  $versionJson = @{
+    name = "DExcelAssist"
+    version = $version
+    installerUrl = "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip"
+    releaseNote = "DExcelAssist installer package"
+  } | ConvertTo-Json -Depth 4
+  Set-Content -Path (Join-Path $uploadDir "version.json") -Value $versionJson -Encoding UTF8
 
+  $uploadReadme = @"
+# DExcelAssist main branch upload files
+
+このフォルダは DExcelAssist.bat の「5: リリース用ファイル作成」で自動作成されます。
+GitHub main ブランチ直下には、この main_branch_upload フォルダの中身だけを配置してください。
+
+配置するファイル:
+- VERSION.txt
+- version.json
+- DExcelAssistInstaller.zip
+- README.md
+
+DExcelAssist の「アップデート確認」は VERSION.txt を確認し、新しいバージョンがある場合に DExcelAssistInstaller.zip をダウンロードしてインストーラを起動します。
+"@
+  Set-Content -Path (Join-Path $uploadDir "README.md") -Value $uploadReadme -Encoding UTF8
 
   $guide = @"
-
 # DExcelAssist release files
-
-
 
 Version: $version
 
+## mainブランチに置くもの
 
+_release/main_branch_upload の中身だけを GitHub main ブランチ直下に配置してください。
 
-## 配布用ファイル
-
-
-
-このフォルダには、DExcelAssist の配布用ZIPと、GitHub main ブランチへ配置できる `main_branch_upload` フォルダを作成します。
-
-
-
-## main_branch_upload に含まれるもの
-
-
-
-- DExcelAssist.bat
+## 配置後のmainブランチ構成
 
 - VERSION.txt
-
+- version.json
+- DExcelAssistInstaller.zip
 - README.md
-
-- payload/DExcelAssist.xlam
-
-- tools/DExcelAssist.ps1
-
-- tools/DExcelAssistExtra.bas
-
-- tools/DExcelAssistAppEvents.cls
-
-- licenses/RelaxTools_LICENSE_NOTE.txt
-
-
 
 ## 注意
 
-
-
-自動アップデート機能は含めていません。
-
-インストール・アンインストール時に操作する対象は DExcelAssist.xlam のみです。RelaxToolsなど他のExcelアドインは削除しません。
-
+インストール・アップデートで操作する対象は DExcelAssist.xlam のみです。RelaxToolsなど他のExcelアドインは削除しません。
 "@
-
   Set-Content -Path (Join-Path $releaseDir "README_RELEASE.md") -Value $guide -Encoding UTF8
 
-
-
-  $zipPath = Join-Path $releaseDir ("DExcelAssistSafeInstaller_$safeVersion.zip")
-
-  if(Test-Path $zipPath){ Remove-Item $zipPath -Force }
-
-  Compress-Archive -Path $stageRoot -DestinationPath $zipPath -Force
+  $localZip = Join-Path $releaseDir ("DExcelAssistInstaller_$safeVersion.zip")
+  Copy-Item $installerZip $localZip -Force
 
   Remove-Item $stageParent -Recurse -Force -ErrorAction SilentlyContinue
 
   Info "リリース用ファイルを作成しました: $releaseDir"
-
-  Write-Host "ZIP: $zipPath"
-
+  Write-Host "インストーラZIP: $localZip"
   Write-Host "mainブランチアップロード用: $uploadDir"
-
 }
 
 
+function Import-ExtraVbaModuleFromFiles([string]$xlamPath,[string]$extraBasPath,[string]$eventsClsPath){
+
+  if(!(Test-Path $extraBasPath)){ throw "追加機能用VBAファイルが見つかりません: $extraBasPath" }
+
+  Enable-ExcelVbomAndTrustedLocation
+
+  $xl = $null
+
+  $wb = $null
+
+  try{
+
+    $xl = New-Object -ComObject Excel.Application
+
+    $xl.DisplayAlerts = $false
+
+    $xl.Visible = $false
+
+    $wb = $xl.Workbooks.Open($xlamPath)
+
+    $vbproj = $wb.VBProject
+
+    for($i=$vbproj.VBComponents.Count; $i -ge 1; $i--){
+
+      $comp=$vbproj.VBComponents.Item($i)
+
+      if($comp.Name -eq 'DExcelAssistExtra' -or $comp.Name -eq 'DExcelAssistAppEvents' -or $comp.Name -like 'DExcelAssistAppEvents*'){
+
+        $vbproj.VBComponents.Remove($comp)
+
+      }
+
+    }
+
+    [void]$vbproj.VBComponents.Import($extraBasPath)
+
+    Add-DExcelAssistEventsClass $vbproj
+
+    $wb.Save()
+
+    $wb.Close($true)
+
+    $xl.Quit()
+
+    Info "追加VBAモジュールをXLAMへ取り込みました。"
+
+  } catch {
+
+    try{ if($wb -ne $null){ $wb.Close($false) } }catch{}
+
+    try{ if($xl -ne $null){ $xl.Quit() } }catch{}
+
+    throw "追加機能用VBAモジュールの取り込みに失敗しました。Excelの『VBAプロジェクト オブジェクト モデルへのアクセスを信頼する』を有効にして再実行してください。詳細: $($_.Exception.Message)"
+
+  } finally {
+
+    try{ if($wb -ne $null){ [System.Runtime.InteropServices.Marshal]::ReleaseComObject($wb) | Out-Null } }catch{}
+
+    try{ if($xl -ne $null){ [System.Runtime.InteropServices.Marshal]::ReleaseComObject($xl) | Out-Null } }catch{}
+
+    [GC]::Collect(); [GC]::WaitForPendingFinalizers()
+
+  }
+
+}
+
+function Find-DExcelAssistSourceRoot([string]$expandedDir){
+
+  $candidates = Get-ChildItem -Path $expandedDir -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object {
+
+    (Test-Path (Join-Path $_.FullName 'payload\DExcelAssist.xlam')) -and
+
+    (Test-Path (Join-Path $_.FullName 'tools\DExcelAssist.ps1')) -and
+
+    (Test-Path (Join-Path $_.FullName 'tools\DExcelAssistExtra.bas'))
+
+  }
+
+  if($candidates.Count -eq 0){
+
+    if((Test-Path (Join-Path $expandedDir 'payload\DExcelAssist.xlam')) -and (Test-Path (Join-Path $expandedDir 'tools\DExcelAssist.ps1'))){ return $expandedDir }
+
+    throw "GitHub mainブランチ内に DExcelAssist の配布ファイル構成が見つかりません。mainブランチ直下に main_branch_upload の中身を配置してください。"
+
+  }
+
+  return ($candidates | Sort-Object { $_.FullName.Length } | Select-Object -First 1).FullName
+
+}
+
+function Copy-SourceToLocalRoot([string]$sourceRoot){
+
+  try{
+
+    foreach($name in @('DExcelAssist.bat','README.md','VERSION.txt','payload','tools','licenses')){
+
+      $src = Join-Path $sourceRoot $name
+
+      if(Test-Path $src){
+
+        $dst = Join-Path $Root $name
+
+        if(Test-Path $dst){ Remove-Item $dst -Recurse -Force -ErrorAction SilentlyContinue }
+
+        Copy-Item $src $dst -Recurse -Force -ErrorAction SilentlyContinue
+
+      }
+
+    }
+
+    Info "ローカル配布ファイルをGitHub main版に更新しました。"
+
+  } catch {
+
+    Warn "ローカル配布ファイルの更新はスキップしました: $($_.Exception.Message)"
+
+  }
+
+}
+
+function Install-DExcelAssistFromSource([string]$sourceRoot){
+
+  $srcPayload = Join-Path $sourceRoot "payload\DExcelAssist.xlam"
+
+  $srcExtra = Join-Path $sourceRoot "tools\DExcelAssistExtra.bas"
+
+  $srcEvents = Join-Path $sourceRoot "tools\DExcelAssistAppEvents.cls"
+
+  if(!(Test-Path $srcPayload)){ throw "payload\DExcelAssist.xlam が見つかりません。" }
+
+  if(!(Test-Path $srcExtra)){ throw "tools\DExcelAssistExtra.bas が見つかりません。" }
+
+  New-Item -ItemType Directory -Force -Path $AddInsDir,$XLStartDir | Out-Null
+
+  Remove-LegacyAutoUpdateTask
+
+  Remove-ExistingAddinRegistrations
+
+  Copy-Item $srcPayload $AddinPath -Force
+
+  Import-ExtraVbaModuleFromFiles $AddinPath $srcExtra $srcEvents
+
+  Copy-Item $AddinPath $XLStartPath -Force
+
+  if(!(Xlam-HasSelectedUi $AddinPath)){ throw "customUIのDExcelAssist 1タブ統合に失敗しています。" }
+
+  Add-OpenReg $AddinPath
+
+  Save-DExcelAssistSettings
+
+}
+
+function Invoke-GitHubMainUpdate {
+
+  $repoZipUrl = "https://github.com/Chairman-bits/DExcelAssist/archive/refs/heads/main.zip"
+
+  $tmp = Join-Path $env:TEMP ("DExcelAssist_Update_" + (Get-Date -Format "yyyyMMddHHmmss"))
+
+  $zip = Join-Path $tmp "main.zip"
+
+  $extract = Join-Path $tmp "extract"
+
+  $log = Join-Path $LogDir ("update_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".log")
+
+  try{
+
+    New-Item -ItemType Directory -Force -Path $tmp,$extract | Out-Null
+
+    Info "GitHub mainブランチからDExcelAssist最新版を取得します。"
+
+    Invoke-WebRequest -Uri $repoZipUrl -OutFile $zip -UseBasicParsing
+
+    Expand-Archive -Path $zip -DestinationPath $extract -Force
+
+    $sourceRoot = Find-DExcelAssistSourceRoot $extract
+
+    Info "更新元: $sourceRoot"
+
+    Info "Excelプロセスを終了してDExcelAssistのみ更新します。"
+
+    Kill-Excel
+
+    Start-Sleep -Milliseconds 800
+
+    Install-DExcelAssistFromSource $sourceRoot
+
+    Copy-SourceToLocalRoot $sourceRoot
+
+    Info "DExcelAssistのアップデートが完了しました。Excelを起動して確認してください。"
+
+    "DExcelAssist update completed: $(Get-Date)" | Set-Content -Path $log -Encoding UTF8
+
+  } catch {
+
+    $msg = "DExcelAssist update failed: $($_.Exception.Message)"
+
+    $msg | Set-Content -Path $log -Encoding UTF8
+
+    throw $msg
+
+  } finally {
+
+    try{ Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue }catch{}
+
+  }
+
+}
 
 function Uninstall {
 
@@ -681,11 +894,35 @@ function Uninstall {
 
 
 
+if($Action -eq 'UpdateFromGitHub'){
+
+  Invoke-GitHubMainUpdate
+
+  return
+
+}
+
+if($Action -eq 'Install'){
+
+  Install-SelectedRelaxTools
+
+  return
+
+}
+
+if($Action -eq 'Release' -or $Action -eq 'MainBranch'){
+
+  Create-ReleaseFiles
+
+  return
+
+}
+
 while($true){
 
   Write-Host ""
 
-  Write-Host "DExcelAssist v112 統合リボン"
+  Write-Host "DExcelAssist v119 統合リボン"
 
   Write-Host "1: インストール/修復（Excel強制終了後、DExcelAssistのみ置換）"
 
@@ -695,7 +932,7 @@ while($true){
 
   Write-Host "4: Excel残留プロセスを強制終了"
 
-  Write-Host "5: リリース用ファイル作成（バージョン入力＋mainブランチアップロード用＋ZIP）"
+  Write-Host "5: リリース用ファイル作成（mainブランチ配置用ファイルも自動作成）"
 
   Write-Host "0: 終了"
 
