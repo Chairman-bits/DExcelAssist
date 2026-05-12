@@ -1,10 +1,11 @@
-Attribute VB_Name = "DExcelAssistExtra"
+Attribute VB_Name = "DelaxToolsExtra"
 
 Option Explicit
 
-' DExcelAssist change-history event state.
+' DelaxTools change-history event state.
+' DelaxTools v166
 ' Module-level declarations must be placed before all procedures.
-Private gDxaEvents As DExcelAssistAppEvents
+Private gDxaEvents As DelaxToolsAppEvents
 Private gDxaSessionId As String
 
 
@@ -32,7 +33,7 @@ Private Declare Function DxaLocalFree Lib "kernel32" Alias "LocalFree" (ByVal hM
 
 
 
-' DExcelAssist v108
+' DelaxTools v108
 
 ' 自動アップデート機能は含めていません。
 
@@ -52,7 +53,7 @@ Public Sub DxaCreateHolidaySheet(ByVal control As Object)
 
     If Not IsNumeric(yText) Then
 
-        MsgBox "年は数値で入力してください。", vbExclamation, "DExcelAssist"
+        MsgBox "年は数値で入力してください。", vbExclamation, "DelaxTools"
 
         Exit Sub
 
@@ -66,7 +67,7 @@ Public Sub DxaCreateHolidaySheet(ByVal control As Object)
 
     If y < 1900 Or y > 2100 Then
 
-        MsgBox "1900～2100の範囲で入力してください。", vbExclamation, "DExcelAssist"
+        MsgBox "1900～2100の範囲で入力してください。", vbExclamation, "DelaxTools"
 
         Exit Sub
 
@@ -164,7 +165,7 @@ Public Sub DxaCreateHolidaySheet(ByVal control As Object)
 
     Application.ScreenUpdating = True
 
-    MsgBox CStr(y) & "年の休日一覧を作成しました。", vbInformation, "DExcelAssist"
+    MsgBox CStr(y) & "年の休日一覧を作成しました。", vbInformation, "DelaxTools"
 
     Exit Sub
 
@@ -174,7 +175,7 @@ EH:
 
     Application.ScreenUpdating = True
 
-    MsgBox "休日シート作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "休日シート作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 
 End Sub
 
@@ -216,7 +217,7 @@ Public Sub DxaAllSheetsZoom100(ByVal control As Object)
 
     Application.ScreenUpdating = True
 
-    MsgBox "全シートの倍率を100%にしました。", vbInformation, "DExcelAssist"
+    MsgBox "全シートの倍率を100%にしました。", vbInformation, "DelaxTools"
 
     Exit Sub
 
@@ -224,7 +225,7 @@ EH:
 
     Application.ScreenUpdating = True
 
-    MsgBox "全シート倍率100%でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "全シート倍率100%でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 
 End Sub
 
@@ -270,7 +271,7 @@ Public Sub DxaAutoFitActiveSheetColumns(ByVal control As Object)
 
     Application.ScreenUpdating = True
 
-    MsgBox "実行シートの列幅を自動調整しました。", vbInformation, "DExcelAssist"
+    MsgBox "実行シートの列幅を自動調整しました。", vbInformation, "DelaxTools"
 
     Exit Sub
 
@@ -278,7 +279,7 @@ EH:
 
     Application.ScreenUpdating = True
 
-    MsgBox "列幅自動調整でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "列幅自動調整でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 
 End Sub
 
@@ -310,7 +311,7 @@ Public Sub DxaAutoFitActiveSheetRows(ByVal control As Object)
 
     Application.ScreenUpdating = True
 
-    MsgBox "実行シートの行高さを自動調整しました。", vbInformation, "DExcelAssist"
+    MsgBox "実行シートの行高さを自動調整しました。", vbInformation, "DelaxTools"
 
     Exit Sub
 
@@ -318,7 +319,7 @@ EH:
 
     Application.ScreenUpdating = True
 
-    MsgBox "行高さ自動調整でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "行高さ自動調整でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 
 End Sub
 
@@ -382,11 +383,11 @@ Private Sub ConvertSelectionAscii(ByVal halfToFull As Boolean)
 
     If halfToFull Then
 
-        MsgBox "選択範囲の半角英数字を全角に変換しました。", vbInformation, "DExcelAssist"
+        MsgBox "選択範囲の半角英数字を全角に変換しました。", vbInformation, "DelaxTools"
 
     Else
 
-        MsgBox "選択範囲の全角英数字を半角に変換しました。", vbInformation, "DExcelAssist"
+        MsgBox "選択範囲の全角英数字を半角に変換しました。", vbInformation, "DelaxTools"
 
     End If
 
@@ -396,7 +397,7 @@ EH:
 
     Application.ScreenUpdating = True
 
-    MsgBox "文字変換でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "文字変換でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 
 End Sub
 
@@ -730,12 +731,12 @@ Public Sub DxaCreateSheetIndex(ByVal control As Object)
     wsIndex.Range("A1").Select
 
     Application.ScreenUpdating = True
-    MsgBox "シート一覧を作成しました。", vbInformation, "DExcelAssist"
+    MsgBox "シート一覧を作成しました。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
     Application.DisplayAlerts = True
     Application.ScreenUpdating = True
-    MsgBox "シート一覧でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "シート一覧でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaBacklogGroupByParent(ByVal control As Object)
@@ -757,13 +758,13 @@ Private Sub DxaBacklogGroupByParentCore()
 
     Set wb = ActiveWorkbook
     If wb Is Nothing Then
-        MsgBox "対象ブックを開いてから実行してください。", vbExclamation, "DExcelAssist"
+        MsgBox "対象ブックを開いてから実行してください。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
     Set wsTarget = ActiveSheet
     If wsTarget Is Nothing Then
-        MsgBox "対象シートを選択してから実行してください。", vbExclamation, "DExcelAssist"
+        MsgBox "対象シートを選択してから実行してください。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
@@ -785,13 +786,13 @@ Private Sub DxaBacklogGroupByParentCore()
     If parentDict.Count = 0 Then
         MsgBox "親課題が見つかりませんでした。" & vbCrLf & _
                "親課題一覧シートを作成するか、Backlogガント出力シートを選択してから実行してください。", _
-               vbExclamation, "DExcelAssist"
+               vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
     lastRowTarget = wsTarget.Cells(wsTarget.Rows.Count, "A").End(xlUp).Row
     If lastRowTarget < 5 Then
-        MsgBox "グループ化対象の行が見つかりませんでした。", vbExclamation, "DExcelAssist"
+        MsgBox "グループ化対象の行が見つかりませんでした。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
@@ -815,14 +816,14 @@ Private Sub DxaBacklogGroupByParentCore()
     Loop
 
     Application.ScreenUpdating = True
-    MsgBox "親課題でグループ化しました。" & vbCrLf & "親課題の判定方法: " & parentSource, vbInformation, "DExcelAssist"
+    MsgBox "親課題でグループ化しました。" & vbCrLf & "親課題の判定方法: " & parentSource, vbInformation, "DelaxTools"
     Exit Sub
 
 EH:
     Application.ScreenUpdating = True
     MsgBox "親課題でグループ化中にエラーが発生しました。" & vbCrLf & _
            "対象ブック・対象シート・親課題一覧シートを確認してください。" & vbCrLf & _
-           Err.Description, vbExclamation, "DExcelAssist"
+           Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Function DxaGroupOneBacklogParent(ByVal wsTarget As Worksheet, ByVal parentDict As Object, ByVal parentRow As Long, ByVal lastRowTarget As Long) As Long
@@ -1444,7 +1445,7 @@ Public Sub DxaExportVbaWithFolderPicker(ByVal control As Object)
 
            "出力先: " & exportFolder & vbCrLf & _
 
-           "出力数: " & CStr(count), vbInformation, "DExcelAssist"
+           "出力数: " & CStr(count), vbInformation, "DelaxTools"
 
     Exit Sub
 
@@ -1454,7 +1455,7 @@ EH:
 
            "Excelの『VBAプロジェクト オブジェクト モデルへのアクセスを信頼する』が必要です。" & vbCrLf & _
 
-           Err.Description, vbExclamation, "DExcelAssist"
+           Err.Description, vbExclamation, "DelaxTools"
 
 End Sub
 
@@ -1622,7 +1623,7 @@ Public Sub DxaInitChangeHistoryEvents()
     On Error Resume Next
     If Len(gDxaSessionId) = 0 Then gDxaSessionId = Format$(Now, "yyyymmddhhnnss") & "_" & CStr(Int(Rnd() * 1000000))
     If gDxaEvents Is Nothing Then
-        Set gDxaEvents = New DExcelAssistAppEvents
+        Set gDxaEvents = New DelaxToolsAppEvents
         gDxaEvents.Init Application
     End If
 
@@ -1673,7 +1674,7 @@ Public Sub DxaCreateChangeHistory(ByVal control As Object)
     Set wb = ActiveWorkbook
     If wb Is Nothing Then Exit Sub
     If DxaIsWorkbookExcluded(wb) Then
-        MsgBox "変更履歴作成の対象ブックを開いてから実行してください。", vbExclamation, "DExcelAssist"
+        MsgBox "変更履歴作成の対象ブックを開いてから実行してください。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
@@ -1682,7 +1683,7 @@ Public Sub DxaCreateChangeHistory(ByVal control As Object)
     If Len(snapshotPath) = 0 Or Not DxaFileExists(snapshotPath) Then
         DxaEnsureSnapshotForWorkbook wb
         MsgBox "変更前状態が未作成だったため、現在の状態を自動保存しました。編集後に再度『変更履歴作成』を実行してください。" & vbCrLf & vbCrLf & _
-               "※元ブックにはシートを追加していません。", vbInformation, "DExcelAssist"
+               "※元ブックにはシートを追加していません。", vbInformation, "DelaxTools"
         Exit Sub
     End If
 
@@ -1696,16 +1697,16 @@ Public Sub DxaCreateChangeHistory(ByVal control As Object)
     Set details = DxaCompareSnapshotMaps(oldMap, curMap)
 
     If details.Count = 0 Then
-        MsgBox "変更は検出されませんでした。", vbInformation, "DExcelAssist"
+        MsgBox "変更は検出されませんでした。", vbInformation, "DelaxTools"
         Exit Sub
     End If
 
     DxaOutputChangeHistoryWorkbook wb, details
     MsgBox "変更履歴貼付用ブックを作成しました。" & vbCrLf & _
-           "元ブックにはシートを追加していません。", vbInformation, "DExcelAssist"
+           "元ブックにはシートを追加していません。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
-    MsgBox "変更履歴作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "変更履歴作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Function DxaIsWorkbookExcluded(ByVal wb As Workbook) As Boolean
@@ -1725,7 +1726,7 @@ End Function
 
 Private Function DxaChangeSnapshotDir() As String
     Dim p As String
-    p = Environ$("APPDATA") & "\DExcelAssist\ChangeSnapshots"
+    p = Environ$("APPDATA") & "\DelaxTools\ChangeSnapshots"
     DxaEnsureFolder p
     DxaChangeSnapshotDir = p
 End Function
@@ -2325,12 +2326,12 @@ Public Sub DxaCheckNotationVariants(ByVal control As Object)
     Dim groups As Object
     Set groups = DxaBuildNotationGroups()
     If groups.Count = 0 Then
-        MsgBox "表記揺れチェック用の辞書が空です。", vbExclamation, "DExcelAssist"
+        MsgBox "表記揺れチェック用の辞書が空です。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: 表記揺れをチェックしています..."
+    Application.StatusBar = "DelaxTools: 表記揺れをチェックしています..."
 
     Dim records As Collection
     Set records = New Collection
@@ -2355,15 +2356,15 @@ Public Sub DxaCheckNotationVariants(ByVal control As Object)
     Application.ScreenUpdating = True
 
     If inconsistent.Count = 0 Then
-        MsgBox "表記揺れは検出されませんでした。結果ブックを作成しました。", vbInformation, "DExcelAssist"
+        MsgBox "表記揺れは検出されませんでした。結果ブックを作成しました。", vbInformation, "DelaxTools"
     Else
-        MsgBox "表記揺れチェックが完了しました。検出グループ数: " & inconsistent.Count, vbInformation, "DExcelAssist"
+        MsgBox "表記揺れチェックが完了しました。検出グループ数: " & inconsistent.Count, vbInformation, "DelaxTools"
     End If
     Exit Sub
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "表記揺れチェックでエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "表記揺れチェックでエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Function DxaBuildNotationGroups() As Object
@@ -2482,7 +2483,7 @@ ContinueLine:
 End Sub
 
 Private Function DxaNotationDictionaryPath() As String
-    DxaNotationDictionaryPath = Environ$("APPDATA") & "\DExcelAssist\notation_variants.csv"
+    DxaNotationDictionaryPath = Environ$("APPDATA") & "\DelaxTools\notation_variants.csv"
 End Function
 
 Private Sub DxaScanNotationWorksheet(ByVal ws As Worksheet, ByVal groups As Object, ByVal records As Collection, ByVal counts As Object, ByVal found As Object)
@@ -2722,7 +2723,7 @@ Public Sub DxaDiagnoseHeavyWorkbook(ByVal control As Object)
     Set srcWb = ActiveWorkbook
     If srcWb Is Nothing Then Exit Sub
     If srcWb.Name = ThisWorkbook.Name Then
-        MsgBox "診断対象のブックをアクティブにしてから実行してください。", vbExclamation, "DExcelAssist"
+        MsgBox "診断対象のブックをアクティブにしてから実行してください。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
@@ -2731,7 +2732,7 @@ Public Sub DxaDiagnoseHeavyWorkbook(ByVal control As Object)
     Dim wsDetail As Worksheet
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: 重いExcel診断を実行しています..."
+    Application.StatusBar = "DelaxTools: 重いExcel診断を実行しています..."
 
     Set reportWb = Application.Workbooks.Add(xlWBATWorksheet)
     Set wsSummary = reportWb.Worksheets(1)
@@ -2761,7 +2762,7 @@ Public Sub DxaDiagnoseHeavyWorkbook(ByVal control As Object)
 
     Dim ws As Worksheet
     For Each ws In srcWb.Worksheets
-        Application.StatusBar = "DExcelAssist: 重いExcel診断中 - " & ws.Name
+        Application.StatusBar = "DelaxTools: 重いExcel診断中 - " & ws.Name
 
         Dim lastRow As Long
         Dim lastCol As Long
@@ -2907,13 +2908,13 @@ Public Sub DxaDiagnoseHeavyWorkbook(ByVal control As Object)
     Application.StatusBar = False
     Application.ScreenUpdating = True
 
-    MsgBox "重いExcel診断が完了しました。結果は別ブックに出力しました。", vbInformation, "DExcelAssist"
+    MsgBox "重いExcel診断が完了しました。結果は別ブックに出力しました。", vbInformation, "DelaxTools"
     Exit Sub
 
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "重いExcel診断でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "重いExcel診断でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Sub DxaPrepareHeavySummarySheet(ByVal ws As Worksheet, ByVal srcWb As Workbook)
@@ -3207,7 +3208,7 @@ Public Sub DxaBacklogFormatGantt(ByVal control As Object)
     If Not DxaBacklogDetectLayout(ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol) Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: Backlogガントを整形しています..."
+    Application.StatusBar = "DelaxTools: Backlogガントを整形しています..."
 
     DxaBacklogFormatIssueColumns ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol
     DxaBacklogFormatDateColumns ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol
@@ -3216,12 +3217,12 @@ Public Sub DxaBacklogFormatGantt(ByVal control As Object)
 
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlogガント整形が完了しました。", vbInformation, "DExcelAssist"
+    MsgBox "Backlogガント整形が完了しました。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlogガント整形でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "Backlogガント整形でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaBacklogCreateGanttSummary(ByVal control As Object)
@@ -3235,7 +3236,7 @@ Public Sub DxaBacklogCreateGanttSummary(ByVal control As Object)
     If Not DxaBacklogDetectLayout(ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol) Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: Backlogガントサマリーを作成しています..."
+    Application.StatusBar = "DelaxTools: Backlogガントサマリーを作成しています..."
 
     Dim outWs As Worksheet
     Set outWs = DxaBacklogRecreateSheet(ws.Parent, "Backlogガントサマリー")
@@ -3244,12 +3245,12 @@ Public Sub DxaBacklogCreateGanttSummary(ByVal control As Object)
     outWs.Activate
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlogガントサマリーを作成しました。", vbInformation, "DExcelAssist"
+    MsgBox "Backlogガントサマリーを作成しました。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlogガントサマリー作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "Backlogガントサマリー作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaBacklogCreateDelayList(ByVal control As Object)
@@ -3263,7 +3264,7 @@ Public Sub DxaBacklogCreateDelayList(ByVal control As Object)
     If Not DxaBacklogDetectLayout(ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol) Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: Backlog遅延一覧を作成しています..."
+    Application.StatusBar = "DelaxTools: Backlog遅延一覧を作成しています..."
 
     Dim outWs As Worksheet
     Set outWs = DxaBacklogRecreateSheet(ws.Parent, "Backlog遅延一覧")
@@ -3272,12 +3273,12 @@ Public Sub DxaBacklogCreateDelayList(ByVal control As Object)
     outWs.Activate
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlog遅延一覧を作成しました。", vbInformation, "DExcelAssist"
+    MsgBox "Backlog遅延一覧を作成しました。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlog遅延一覧作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "Backlog遅延一覧作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaBacklogCreateMeetingView(ByVal control As Object)
@@ -3291,7 +3292,7 @@ Public Sub DxaBacklogCreateMeetingView(ByVal control As Object)
     If Not DxaBacklogDetectLayout(ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol) Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: Backlog会議用ビューを作成しています..."
+    Application.StatusBar = "DelaxTools: Backlog会議用ビューを作成しています..."
 
     Dim outWs As Worksheet
     Set outWs = DxaBacklogRecreateSheet(ws.Parent, "Backlog会議用")
@@ -3300,12 +3301,12 @@ Public Sub DxaBacklogCreateMeetingView(ByVal control As Object)
     outWs.Activate
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlog会議用ビューを作成しました。", vbInformation, "DExcelAssist"
+    MsgBox "Backlog会議用ビューを作成しました。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlog会議用ビュー作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "Backlog会議用ビュー作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaBacklogCreateAssigneeLoad(ByVal control As Object)
@@ -3319,7 +3320,7 @@ Public Sub DxaBacklogCreateAssigneeLoad(ByVal control As Object)
     If Not DxaBacklogDetectLayout(ws, headerRow, dataFirstRow, lastRow, lastCol, dateStartCol) Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: Backlog担当者別負荷を作成しています..."
+    Application.StatusBar = "DelaxTools: Backlog担当者別負荷を作成しています..."
 
     Dim outWs As Worksheet
     Set outWs = DxaBacklogRecreateSheet(ws.Parent, "Backlog担当者別負荷")
@@ -3328,12 +3329,12 @@ Public Sub DxaBacklogCreateAssigneeLoad(ByVal control As Object)
     outWs.Activate
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlog担当者別負荷を作成しました。", vbInformation, "DExcelAssist"
+    MsgBox "Backlog担当者別負荷を作成しました。", vbInformation, "DelaxTools"
     Exit Sub
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
-    MsgBox "Backlog担当者別負荷作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "Backlog担当者別負荷作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Function DxaBacklogDetectLayout(ByVal ws As Worksheet, ByRef headerRow As Long, ByRef dataFirstRow As Long, ByRef lastRow As Long, ByRef lastCol As Long, ByRef dateStartCol As Long) As Boolean
@@ -3354,7 +3355,7 @@ Private Function DxaBacklogDetectLayout(ByVal ws As Worksheet, ByRef headerRow A
     lastRow = DxaBacklogLastUsedRow(ws)
     lastCol = DxaBacklogLastUsedCol(ws)
     If lastRow < dataFirstRow Or lastCol < 12 Then
-        MsgBox "Backlogガント出力形式を判定できませんでした。A～L列に課題情報があるシートをアクティブにして実行してください。", vbExclamation, "DExcelAssist"
+        MsgBox "Backlogガント出力形式を判定できませんでした。A～L列に課題情報があるシートをアクティブにして実行してください。", vbExclamation, "DelaxTools"
         Exit Function
     End If
 
@@ -3735,14 +3736,14 @@ End Sub
 
 Public Sub DxaConfigureTimecardTargetName(ByVal control As Object)
     ' 勤怠取得時に優先検索する対象者名を事前保存します。
-    ' v157: 対象者設定画面から不要な説明枠とタイトルのDExcelAssist表記を削除します。
+    ' v157: 対象者設定画面から不要な説明枠とタイトルのDelaxTools表記を削除します。
     On Error GoTo EH
 
     DxaOpenTimecardTargetSettingsSheet
     Exit Sub
 
 EH:
-    MsgBox "勤怠取得対象者名の設定でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "勤怠取得対象者名の設定でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaOpenTimecardTargetSettingsSheet()
@@ -3763,7 +3764,7 @@ Public Sub DxaOpenTimecardTargetSettingsSheet()
     Exit Sub
 
 EH:
-    MsgBox "勤怠取得対象者設定画面を開けませんでした。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "勤怠取得対象者設定画面を開けませんでした。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaSaveTimecardTargetNamesFromSheet()
@@ -3772,7 +3773,7 @@ Public Sub DxaSaveTimecardTargetNamesFromSheet()
     Dim ws As Worksheet
     Set ws = DxaGetTimecardTargetSettingsSheet()
     If ws Is Nothing Then
-        MsgBox "勤怠対象者設定シートが見つかりません。対象者設定ボタンから開き直してください。", vbExclamation, "DExcelAssist"
+        MsgBox "勤怠対象者設定シートが見つかりません。対象者設定ボタンから開き直してください。", vbExclamation, "DelaxTools"
         Exit Sub
     End If
 
@@ -3785,12 +3786,12 @@ Public Sub DxaSaveTimecardTargetNamesFromSheet()
     Next
 
     If targetNames.Count = 0 Then
-        If MsgBox("対象者名が入力されていません。保存済み対象者名をすべて削除しますか？", vbQuestion + vbYesNo, "DExcelAssist 勤怠対象者設定") = vbYes Then
+        If MsgBox("対象者名が入力されていません。保存済み対象者名をすべて削除しますか？", vbQuestion + vbYesNo, "DelaxTools 勤怠対象者設定") = vbYes Then
             If DxaDeleteTimecardSavedTargetName() Then
                 ws.Range("B8:B57").ClearContents
-                MsgBox "保存済み対象者名を削除しました。", vbInformation, "DExcelAssist"
+                MsgBox "保存済み対象者名を削除しました。", vbInformation, "DelaxTools"
             Else
-                MsgBox "保存済み対象者名の削除に失敗しました。", vbExclamation, "DExcelAssist"
+                MsgBox "保存済み対象者名の削除に失敗しました。", vbExclamation, "DelaxTools"
             End If
         End If
         Exit Sub
@@ -3798,14 +3799,14 @@ Public Sub DxaSaveTimecardTargetNamesFromSheet()
 
     If DxaSaveTimecardSavedTargetName(DxaJoinTimecardTargetNames(targetNames)) Then
         DxaRenderTimecardTargetSettingsSheet ws
-        MsgBox "勤怠取得対象者名を保存しました。" & vbCrLf & vbCrLf & DxaJoinTimecardTargetNamesForMessage(DxaJoinTimecardTargetNames(targetNames)), vbInformation, "DExcelAssist"
+        MsgBox "勤怠取得対象者名を保存しました。" & vbCrLf & vbCrLf & DxaJoinTimecardTargetNamesForMessage(DxaJoinTimecardTargetNames(targetNames)), vbInformation, "DelaxTools"
     Else
-        MsgBox "勤怠取得対象者名の保存に失敗しました。", vbExclamation, "DExcelAssist"
+        MsgBox "勤怠取得対象者名の保存に失敗しました。", vbExclamation, "DelaxTools"
     End If
     Exit Sub
 
 EH:
-    MsgBox "勤怠取得対象者名の保存でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "勤怠取得対象者名の保存でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Public Sub DxaClearTimecardTargetNamesFromSheet()
@@ -3815,18 +3816,18 @@ Public Sub DxaClearTimecardTargetNamesFromSheet()
     Set ws = DxaGetTimecardTargetSettingsSheet()
     If ws Is Nothing Then Exit Sub
 
-    If MsgBox("保存済み対象者名をすべて削除しますか？", vbQuestion + vbYesNo, "DExcelAssist 勤怠対象者設定") <> vbYes Then Exit Sub
+    If MsgBox("保存済み対象者名をすべて削除しますか？", vbQuestion + vbYesNo, "DelaxTools 勤怠対象者設定") <> vbYes Then Exit Sub
 
     If DxaDeleteTimecardSavedTargetName() Then
         ws.Range("B8:B57").ClearContents
-        MsgBox "保存済み対象者名を削除しました。", vbInformation, "DExcelAssist"
+        MsgBox "保存済み対象者名を削除しました。", vbInformation, "DelaxTools"
     Else
-        MsgBox "保存済み対象者名の削除に失敗しました。", vbExclamation, "DExcelAssist"
+        MsgBox "保存済み対象者名の削除に失敗しました。", vbExclamation, "DelaxTools"
     End If
     Exit Sub
 
 EH:
-    MsgBox "勤怠取得対象者名の削除でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "勤怠取得対象者名の削除でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Function DxaGetOrCreateTimecardTargetSettingsSheet(ByVal wb As Workbook) As Worksheet
@@ -4003,7 +4004,7 @@ Private Sub DxaImportTimecardFromWebCore(ByVal endRoundMode As Long, ByVal workT
     If DxaLoadTimecardSavedCredentials(savedEmail, savedPassword) Then
         savedAnswer = MsgBox("保存済みのログイン情報を使用しますか？" & vbCrLf & vbCrLf & _
                              "メールアドレス: " & savedEmail, _
-                             vbYesNoCancel + vbQuestion, "DExcelAssist 勤怠取得")
+                             vbYesNoCancel + vbQuestion, "DelaxTools 勤怠取得")
         If savedAnswer = vbCancel Then Exit Sub
         If savedAnswer = vbYes Then
             email = savedEmail
@@ -4013,23 +4014,23 @@ Private Sub DxaImportTimecardFromWebCore(ByVal endRoundMode As Long, ByVal workT
     End If
 
     If Len(email) = 0 Then
-        email = DxaPromptRequiredText("メールアドレスを入力してください。", "DExcelAssist 勤怠取得", savedEmail)
+        email = DxaPromptRequiredText("メールアドレスを入力してください。", "DelaxTools 勤怠取得", savedEmail)
         If Len(email) = 0 Then Exit Sub
     End If
 
     If Len(password) = 0 Then
-        password = DxaPromptRequiredText("パスワードを入力してください。", "DExcelAssist 勤怠取得")
+        password = DxaPromptRequiredText("パスワードを入力してください。", "DelaxTools 勤怠取得")
         If Len(password) = 0 Then Exit Sub
     End If
 
-    Application.StatusBar = "DExcelAssist: 勤怠サイトへ接続しています..."
+    Application.StatusBar = "DelaxTools: 勤怠サイトへ接続しています..."
 
     Dim displayItems As Collection
     Set displayItems = DxaFetchTimecardDisplayItems(loginUrl, managedListUrl, email, password)
 
     If displayItems Is Nothing Or displayItems.Count = 0 Then
         MsgBox "勤怠一覧画面を取得できませんでした。" & vbCrLf & vbCrLf & _
-               "メールアドレス、パスワード、サイト側の画面構成を確認してください。", vbExclamation, "DExcelAssist"
+               "メールアドレス、パスワード、サイト側の画面構成を確認してください。", vbExclamation, "DelaxTools"
         GoTo CleanExit
     End If
 
@@ -4060,26 +4061,26 @@ Private Sub DxaImportTimecardFromWebCore(ByVal endRoundMode As Long, ByVal workT
     If successCount = 0 Then
         MsgBox "勤怠一覧画面から日付、出勤時刻、退勤時刻を検出できませんでした。" & vbCrLf & vbCrLf & _
                "対象者の勤怠一覧画面が表示されているか、サイト側のHTML構造を確認してください。" & vbCrLf & vbCrLf & _
-               failedText, vbExclamation, "DExcelAssist"
+               failedText, vbExclamation, "DelaxTools"
         GoTo CleanExit
     End If
 
     If Len(failedText) > 0 Then
         MsgBox "勤怠取得は一部完了しました。" & vbCrLf & vbCrLf & _
                "取得成功: " & CStr(successCount) & "名" & vbCrLf & vbCrLf & _
-               "取得できなかった対象者:" & vbCrLf & failedText, vbExclamation, "DExcelAssist"
+               "取得できなかった対象者:" & vbCrLf & failedText, vbExclamation, "DelaxTools"
     End If
 
     If Not usedSavedCredentials Then
         If MsgBox("今回入力したメールアドレスとパスワードをこのPCに保存しますか？" & vbCrLf & vbCrLf & _
                   "次回から入力を省略できます。" & vbCrLf & _
                   "パスワードはWindowsのユーザー単位で暗号化して保存します。", _
-                  vbYesNo + vbQuestion, "DExcelAssist 勤怠取得") = vbYes Then
+                  vbYesNo + vbQuestion, "DelaxTools 勤怠取得") = vbYes Then
             If DxaSaveTimecardCredentials(email, password) Then
-                MsgBox "ログイン情報を保存しました。", vbInformation, "DExcelAssist"
+                MsgBox "ログイン情報を保存しました。", vbInformation, "DelaxTools"
             Else
                 MsgBox "ログイン情報の保存に失敗しました。" & vbCrLf & _
-                       "勤怠取得の結果は出力済みです。", vbExclamation, "DExcelAssist"
+                       "勤怠取得の結果は出力済みです。", vbExclamation, "DelaxTools"
             End If
         End If
     End If
@@ -4090,7 +4091,7 @@ CleanExit:
 
 EH:
     Application.StatusBar = False
-    MsgBox "勤怠表取得でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DExcelAssist"
+    MsgBox "勤怠表取得でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
 End Sub
 
 Private Function DxaPromptRequiredText(ByVal prompt As String, ByVal title As String, Optional ByVal defaultValue As String = "") As String
@@ -4190,7 +4191,7 @@ Private Function DxaTimecardCredentialFilePath() As String
     If Len(appData) = 0 Then Exit Function
 
     Dim folderPath As String
-    folderPath = appData & "\DExcelAssist"
+    folderPath = appData & "\DelaxTools"
     If Len(Dir$(folderPath, vbDirectory)) = 0 Then MkDir folderPath
 
     DxaTimecardCredentialFilePath = folderPath & "\timecard_credentials.dat"
@@ -4416,7 +4417,7 @@ Private Function DxaTimecardTargetNameFilePath() As String
     If Len(appData) = 0 Then Exit Function
 
     Dim folderPath As String
-    folderPath = appData & "\DExcelAssist"
+    folderPath = appData & "\DelaxTools"
     If Len(Dir$(folderPath, vbDirectory)) = 0 Then MkDir folderPath
 
     DxaTimecardTargetNameFilePath = folderPath & "\timecard_target_name.dat"
@@ -4721,7 +4722,7 @@ Private Function DxaFetchTimecardDisplayItems(ByVal timeScreenUrl As String, ByV
         If Len(loggedInHtml) > 0 Then Call DxaSaveTimecardDebugHtml("login_post_result", loggedInHtml)
         If Len(timeScreenHtml) > 0 Then Call DxaSaveTimecardDebugHtml("time_screen_after_login", timeScreenHtml)
         If Len(managerHtml) > 0 Then Call DxaSaveTimecardDebugHtml("manager_post_result", managerHtml)
-        Err.Raise vbObjectError + 621, "DExcelAssist", "管理一覧画面を取得できませんでした。" & vbCrLf & _
+        Err.Raise vbObjectError + 621, "DelaxTools", "管理一覧画面を取得できませんでした。" & vbCrLf & _
                  "処理順は TimeScreen.jsp → ログイン画面 → ログイン → TimeScreen.jsp → GetManagedList です。" & vbCrLf & _
                  "確認用HTMLを複数保存しました。first_access / login_script / login_form / login_post_result / time_screen_after_login / manager_post_result を確認してください。" & vbCrLf & _
                  "確認用HTML: " & debugPath
@@ -4733,7 +4734,7 @@ Private Function DxaFetchTimecardDisplayItems(ByVal timeScreenUrl As String, ByV
     If candidates Is Nothing Or candidates.Count = 0 Then
         Dim debugListPath As String
         debugListPath = DxaSaveTimecardDebugHtml("managed_list", listHtml)
-        Err.Raise vbObjectError + 622, "DExcelAssist", "管理一覧から勤怠取得対象者を検出できませんでした。" & vbCrLf & _
+        Err.Raise vbObjectError + 622, "DelaxTools", "管理一覧から勤怠取得対象者を検出できませんでした。" & vbCrLf & _
                  "管理一覧画面は取得できていますが、対象者ボタンのHTML構成が想定と異なる可能性があります。" & vbCrLf & _
                  "確認用HTML: " & debugListPath
     End If
@@ -4755,7 +4756,7 @@ Private Function DxaFetchTimecardDisplayItems(ByVal timeScreenUrl As String, ByV
     For Each item In selectedUsers
         targetName = CStr(item(0))
         userValue = CStr(item(1))
-        Application.StatusBar = "DExcelAssist: " & targetName & " さんの勤怠一覧を取得しています..."
+        Application.StatusBar = "DelaxTools: " & targetName & " さんの勤怠一覧を取得しています..."
         html = DxaFetchTimecardDisplayHtmlByUserValue(managedListUrl, cookies, userValue, listHtml)
         result.Add Array(targetName, userValue, html)
     Next
@@ -4866,7 +4867,7 @@ Private Function DxaFetchTimecardDisplayHtml(ByVal timeScreenUrl As String, ByVa
         If Len(loggedInHtml) > 0 Then Call DxaSaveTimecardDebugHtml("login_post_result", loggedInHtml)
         If Len(timeScreenHtml) > 0 Then Call DxaSaveTimecardDebugHtml("time_screen_after_login", timeScreenHtml)
         If Len(managerHtml) > 0 Then Call DxaSaveTimecardDebugHtml("manager_post_result", managerHtml)
-        Err.Raise vbObjectError + 621, "DExcelAssist", "管理一覧画面を取得できませんでした。" & vbCrLf & _
+        Err.Raise vbObjectError + 621, "DelaxTools", "管理一覧画面を取得できませんでした。" & vbCrLf & _
                  "処理順は TimeScreen.jsp → ログイン画面 → ログイン → TimeScreen.jsp → GetManagedList です。" & vbCrLf & _
                  "v157では対象者設定画面を簡素化しています。" & vbCrLf & _
                  "確認用HTMLを複数保存しました。first_access / login_script / login_form / login_post_result / time_screen_after_login / manager_post_result を確認してください。" & vbCrLf & _
@@ -4879,7 +4880,7 @@ Private Function DxaFetchTimecardDisplayHtml(ByVal timeScreenUrl As String, ByVa
     If candidates Is Nothing Or candidates.Count = 0 Then
         Dim debugListPath As String
         debugListPath = DxaSaveTimecardDebugHtml("managed_list", listHtml)
-        Err.Raise vbObjectError + 622, "DExcelAssist", "管理一覧から勤怠取得対象者を検出できませんでした。" & vbCrLf & _
+        Err.Raise vbObjectError + 622, "DelaxTools", "管理一覧から勤怠取得対象者を検出できませんでした。" & vbCrLf & _
                  "管理一覧画面は取得できていますが、対象者ボタンのHTML構成が想定と異なる可能性があります。" & vbCrLf & _
                  "確認用HTML: " & debugListPath
     End If
@@ -5498,7 +5499,7 @@ Private Function DxaFetchTimecardDisplayHtmlByUserValue(ByVal managedListUrl As 
         Exit Function
     End If
 
-    Err.Raise vbObjectError + 622, "DExcelAssist", "対象者の勤怠一覧画面へ遷移できませんでした。サイト側の送信項目が変更されている可能性があります。" & vbCrLf & _
+    Err.Raise vbObjectError + 622, "DelaxTools", "対象者の勤怠一覧画面へ遷移できませんでした。サイト側の送信項目が変更されている可能性があります。" & vbCrLf & _
              "確認用HTMLとして display_list_post_body / display_list_post_result を保存している場合があります。"
     Exit Function
 
@@ -5561,7 +5562,7 @@ End Function
 Private Function DxaSaveTimecardDebugHtml(ByVal stageName As String, ByVal html As String) As String
     On Error GoTo EH
     Dim folderPath As String
-    folderPath = Environ$("APPDATA") & "\DExcelAssist\logs"
+    folderPath = Environ$("APPDATA") & "\DelaxTools\logs"
     DxaEnsureFolder folderPath
 
     Dim path As String
@@ -6049,7 +6050,7 @@ Private Function DxaDictionaryToPostBody(ByVal dict As Object) As String
 End Function
 
 Private Function DxaTimecardWebV156Marker() As String
-    DxaTimecardWebV156Marker = "v157"
+    DxaTimecardWebV156Marker = "v161"
 End Function
 
 Private Function DxaParseTimecardUserCandidates(ByVal html As String) As Collection
@@ -6291,7 +6292,7 @@ Private Function DxaResolveTimecardSelectedUsers(ByVal candidates As Collection)
         If Len(failedText) > 0 Then
             MsgBox "保存済み対象者名のうち、管理一覧で一致候補を特定できない名前がありました。" & vbCrLf & vbCrLf & _
                    failedText & vbCrLf & _
-                   "取得できる対象者のみ処理を続行します。", vbExclamation, "DExcelAssist 勤怠取得"
+                   "取得できる対象者のみ処理を続行します。", vbExclamation, "DelaxTools 勤怠取得"
         End If
 
         If result.Count > 0 Then
@@ -6372,7 +6373,7 @@ Private Function DxaResolveTimecardCandidateForTarget(ByVal candidates As Collec
     Next
 
     Dim choiceText As String
-    choiceText = Trim$(InputBox(prompt, "DExcelAssist 勤怠取得", "1"))
+    choiceText = Trim$(InputBox(prompt, "DelaxTools 勤怠取得", "1"))
     If Len(choiceText) = 0 Then Exit Function
     If Not IsNumeric(choiceText) Then Exit Function
 
@@ -6461,7 +6462,7 @@ Private Function DxaPromptTimecardUserSelection(ByVal candidates As Collection) 
     Else
         filterText = InputBox("取得対象者の氏名の一部を入力してください。" & vbCrLf & _
                               "空白の有無は無視します。空欄の場合は一覧の先頭候補を表示します。", _
-                              "DExcelAssist 勤怠取得")
+                              "DelaxTools 勤怠取得")
         filterText = Trim$(filterText)
     End If
 
@@ -6495,10 +6496,10 @@ BuildCandidateList:
         If usingSavedTarget Then
             MsgBox "保存済み対象者名に一致する候補が見つかりませんでした。" & vbCrLf & vbCrLf & _
                    "保存済み対象者名: " & savedTargetName & vbCrLf & _
-                   "氏名の表記が変わっている可能性があります。再入力してください。", vbExclamation, "DExcelAssist"
+                   "氏名の表記が変わっている可能性があります。再入力してください。", vbExclamation, "DelaxTools"
             filterText = InputBox("取得対象者の氏名の一部を入力してください。" & vbCrLf & _
                                   "空白の有無は無視します。", _
-                                  "DExcelAssist 勤怠取得", savedTargetName)
+                                  "DelaxTools 勤怠取得", savedTargetName)
             filterText = Trim$(filterText)
             usingSavedTarget = False
             If Len(filterText) = 0 Then Exit Function
@@ -6506,7 +6507,7 @@ BuildCandidateList:
         End If
 
         MsgBox "入力された氏名に近い候補が見つかりませんでした。" & vbCrLf & _
-               "空白の有無や一部の文字で再度試してください。", vbExclamation, "DExcelAssist"
+               "空白の有無や一部の文字で再度試してください。", vbExclamation, "DelaxTools"
         Exit Function
     End If
 
@@ -6527,7 +6528,7 @@ BuildCandidateList:
             confirmText = "以下の対象者の勤怠一覧を取得しますか？" & vbCrLf & vbCrLf & CStr(rec(0))
         End If
 
-        If MsgBox(confirmText, vbQuestion + vbYesNo, "DExcelAssist 勤怠取得") = vbYes Then
+        If MsgBox(confirmText, vbQuestion + vbYesNo, "DelaxTools 勤怠取得") = vbYes Then
             DxaPromptTimecardUserSelection = CStr(rec(1))
         End If
         Exit Function
@@ -6550,18 +6551,18 @@ BuildCandidateList:
     Next
 
     Dim choiceText As String
-    choiceText = InputBox(prompt, "DExcelAssist 勤怠取得")
+    choiceText = InputBox(prompt, "DelaxTools 勤怠取得")
     choiceText = Trim$(choiceText)
     If Len(choiceText) = 0 Then Exit Function
     If Not IsNumeric(choiceText) Then
-        MsgBox "番号を入力してください。", vbExclamation, "DExcelAssist"
+        MsgBox "番号を入力してください。", vbExclamation, "DelaxTools"
         Exit Function
     End If
 
     Dim choiceNo As Long
     choiceNo = CLng(choiceText)
     If choiceNo < 1 Or choiceNo > maxShow Then
-        MsgBox "候補一覧に表示されている番号を入力してください。", vbExclamation, "DExcelAssist"
+        MsgBox "候補一覧に表示されている番号を入力してください。", vbExclamation, "DelaxTools"
         Exit Function
     End If
 
@@ -6598,11 +6599,11 @@ Private Function DxaPromptTimecardSavedTargetName(ByVal savedTargetNames As Coll
     Next
 
     Dim choiceText As String
-    choiceText = InputBox(prompt, "DExcelAssist 勤怠取得", "1")
+    choiceText = InputBox(prompt, "DelaxTools 勤怠取得", "1")
     choiceText = Trim$(choiceText)
     If Len(choiceText) = 0 Then Exit Function
     If Not IsNumeric(choiceText) Then
-        MsgBox "番号を入力してください。", vbExclamation, "DExcelAssist"
+        MsgBox "番号を入力してください。", vbExclamation, "DelaxTools"
         Exit Function
     End If
 
@@ -6612,13 +6613,13 @@ Private Function DxaPromptTimecardSavedTargetName(ByVal savedTargetNames As Coll
     If choiceNo = 0 Then
         DxaPromptTimecardSavedTargetName = Trim$(InputBox("取得対象者の氏名の一部を入力してください。" & vbCrLf & _
                                                          "空白の有無は無視します。", _
-                                                         "DExcelAssist 勤怠取得"))
+                                                         "DelaxTools 勤怠取得"))
         usingSavedTarget = False
         Exit Function
     End If
 
     If choiceNo < 1 Or choiceNo > savedTargetNames.Count Then
-        MsgBox "保存済み対象者名一覧に表示されている番号を入力してください。", vbExclamation, "DExcelAssist"
+        MsgBox "保存済み対象者名一覧に表示されている番号を入力してください。", vbExclamation, "DelaxTools"
         Exit Function
     End If
 
@@ -6830,7 +6831,7 @@ Private Function DxaHttpRequest(ByVal method As String, ByVal url As String, ByV
     Exit Function
 
 EH:
-    Err.Raise vbObjectError + 631, "DExcelAssist", "Timecard site communication failed." & vbCrLf & Err.Description
+    Err.Raise vbObjectError + 631, "DelaxTools", "Timecard site communication failed." & vbCrLf & Err.Description
 End Function
 
 Private Sub DxaMergeResponseCookies(ByRef cookies As String, ByVal headers As String)
@@ -7522,7 +7523,7 @@ End Function
 
 
 
-' DExcelAssist v114
+' DelaxTools v114
 ' アクティブブックの外部データ、クエリ、ピボットテーブル、数式を更新します。
 Public Sub DxaRefreshWorkbook(ByVal control As Object)
     On Error GoTo EH
@@ -7536,23 +7537,23 @@ Public Sub DxaRefreshWorkbook(ByVal control As Object)
     Dim refreshedQueryCount As Long
 
     If Application.Workbooks.Count = 0 Then
-        MsgBox "更新対象のブックが開かれていません。", vbExclamation, "DExcelAssist 更新"
+        MsgBox "更新対象のブックが開かれていません。", vbExclamation, "DelaxTools 更新"
         Exit Sub
     End If
 
     Set wb = ActiveWorkbook
     If wb Is Nothing Then
-        MsgBox "更新対象のブックを取得できませんでした。", vbExclamation, "DExcelAssist 更新"
+        MsgBox "更新対象のブックを取得できませんでした。", vbExclamation, "DelaxTools 更新"
         Exit Sub
     End If
 
     If StrComp(wb.Name, ThisWorkbook.Name, vbTextCompare) = 0 Then
-        MsgBox "DExcelAssist.xlamではなく、更新したいブックをアクティブにしてから実行してください。", vbExclamation, "DExcelAssist 更新"
+        MsgBox "DelaxTools.xlamではなく、更新したいブックをアクティブにしてから実行してください。", vbExclamation, "DelaxTools 更新"
         Exit Sub
     End If
 
     Application.ScreenUpdating = False
-    Application.StatusBar = "DExcelAssist: ブックを更新しています..."
+    Application.StatusBar = "DelaxTools: ブックを更新しています..."
 
     On Error Resume Next
     wb.RefreshAll
@@ -7596,22 +7597,24 @@ Public Sub DxaRefreshWorkbook(ByVal control As Object)
            "対象ブック: " & wb.Name & vbCrLf & _
            "更新したクエリ/テーブル: " & refreshedQueryCount & vbCrLf & _
            "更新したピボットテーブル: " & refreshedPivotCount, _
-           vbInformation, "DExcelAssist 更新"
+           vbInformation, "DelaxTools 更新"
     Exit Sub
 
 EH:
     Application.StatusBar = False
     Application.ScreenUpdating = True
     MsgBox "更新中にエラーが発生しました。" & vbCrLf & _
-           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DExcelAssist 更新"
+           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DelaxTools 更新"
 End Sub
 
 
 
-' DExcelAssist v115
+' DelaxTools v115
 ' GitHub mainブランチのVERSION.txtを確認し、現在より新しい場合だけ確認ダイアログを表示してアップデートします。
-Public Sub DxaCheckDExcelAssistUpdate(ByVal control As Object)
+Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     On Error GoTo EH
+
+    If DxaTryHandleSecretInstallerDownloadCommand() Then Exit Sub
 
     Dim currentVersion As String
     Dim latestVersion As String
@@ -7622,25 +7625,25 @@ Public Sub DxaCheckDExcelAssistUpdate(ByVal control As Object)
     If Len(Trim$(latestVersion)) = 0 Then
         MsgBox "GitHub mainブランチのVERSION.txtを取得できませんでした。" & vbCrLf & _
                "ネットワーク接続、またはGitHub mainブランチの配置を確認してください。", _
-               vbExclamation, "DExcelAssist アップデート確認"
+               vbExclamation, "DelaxTools アップデート確認"
         Exit Sub
     End If
 
     If DxaCompareVersionText(currentVersion, latestVersion) >= 0 Then
-        MsgBox "DExcelAssistは最新です。" & vbCrLf & vbCrLf & _
+        MsgBox "DelaxToolsは最新です。" & vbCrLf & vbCrLf & _
                "現在のバージョン: " & currentVersion & vbCrLf & _
                "最新のバージョン: " & latestVersion, _
-               vbInformation, "DExcelAssist アップデート確認"
+               vbInformation, "DelaxTools アップデート確認"
         Exit Sub
     End If
 
     Dim answer As VbMsgBoxResult
-    answer = MsgBox("新しいDExcelAssistが見つかりました。" & vbCrLf & vbCrLf & _
+    answer = MsgBox("新しいDelaxToolsが見つかりました。" & vbCrLf & vbCrLf & _
                     "現在のバージョン: " & currentVersion & vbCrLf & _
                     "最新のバージョン: " & latestVersion & vbCrLf & vbCrLf & _
                     "インストーラをダウンロードしてアップデートしますか？" & vbCrLf & _
                     "アップデート中はExcelを終了します。", _
-                    vbYesNo + vbQuestion, "DExcelAssist アップデート確認")
+                    vbYesNo + vbQuestion, "DelaxTools アップデート確認")
     If answer <> vbYes Then Exit Sub
 
     Dim wb As Workbook
@@ -7649,7 +7652,7 @@ Public Sub DxaCheckDExcelAssistUpdate(ByVal control As Object)
             If wb.Saved = False Then
                 MsgBox "保存されていないブックがあります。" & vbCrLf & _
                        "アップデートではExcelを終了するため、先にすべて保存してから再実行してください。" & vbCrLf & _
-                       "対象: " & wb.Name, vbExclamation, "DExcelAssist アップデート確認"
+                       "対象: " & wb.Name, vbExclamation, "DelaxTools アップデート確認"
                 Exit Sub
             End If
         End If
@@ -7660,45 +7663,164 @@ Public Sub DxaCheckDExcelAssistUpdate(ByVal control As Object)
     Dim psCmd As String
     Dim sh As Object
 
-    tempDir = Environ$("TEMP") & "\DExcelAssistInstaller_" & Format$(Now, "yyyymmdd_hhnnss")
-    zipPath = tempDir & "\DExcelAssistInstaller.zip"
+    tempDir = Environ$("TEMP") & "\DelaxToolsInstaller_" & Format$(Now, "yyyymmdd_hhnnss")
+    zipPath = tempDir & "\DelaxToolsInstaller.zip"
 
     psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command " & _
             DxaQuoteForCommand("$ErrorActionPreference='Stop'; " & _
             "New-Item -ItemType Directory -Force -Path " & DxaPsQuote(tempDir) & " | Out-Null; " & _
-            "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip' -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; " & _
+            "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip' -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; " & _
             "Expand-Archive -Path " & DxaPsQuote(zipPath) & " -DestinationPath " & DxaPsQuote(tempDir) & " -Force; " & _
-            "$bat = Get-ChildItem -Path " & DxaPsQuote(tempDir) & " -Recurse -Filter 'DExcelAssist.bat' | Select-Object -First 1; " & _
-            "if($null -eq $bat){ throw 'DExcelAssist.bat が見つかりません。' }; " & _
+            "$bat = Get-ChildItem -Path " & DxaPsQuote(tempDir) & " -Recurse -Filter 'DelaxTools.bat' | Select-Object -First 1; " & _
+            "if($null -eq $bat){ throw 'DelaxTools.bat が見つかりません。' }; " & _
             "Start-Process -FilePath $bat.FullName -ArgumentList '/install' -WorkingDirectory $bat.DirectoryName")
 
     Set sh = CreateObject("WScript.Shell")
     sh.Run psCmd, 0, False
 
-    MsgBox "DExcelAssistのインストーラを起動しました。" & vbCrLf & _
+    MsgBox "DelaxToolsのインストーラを起動しました。" & vbCrLf & _
            "このあとExcelを終了します。インストール完了後にExcelを再起動してください。", _
-           vbInformation, "DExcelAssist アップデート確認"
+           vbInformation, "DelaxTools アップデート確認"
 
     Application.DisplayAlerts = False
     Application.Quit
     Exit Sub
 
 EH:
-    MsgBox "DExcelAssistのアップデート確認中にエラーが発生しました。" & vbCrLf & _
-           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DExcelAssist アップデート確認"
+    MsgBox "DelaxToolsのアップデート確認中にエラーが発生しました。" & vbCrLf & _
+           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DelaxTools アップデート確認"
 End Sub
 
 ' 旧リボンIDとの互換用。現在のリボンからは呼び出しません。
-Public Sub DxaUpdateDExcelAssist(ByVal control As Object)
-    DxaCheckDExcelAssistUpdate control
+Public Sub DxaUpdateDelaxTools(ByVal control As Object)
+    DxaCheckDelaxToolsUpdate control
 End Sub
+
+Private Function DxaTryHandleSecretInstallerDownloadCommand() As Boolean
+    On Error GoTo EH
+
+    If TypeName(Selection) <> "Range" Then Exit Function
+
+    Dim commandText As String
+    commandText = UCase$(Trim$(CStr(ActiveCell.Value)))
+
+    If commandText <> "KO" Then Exit Function
+
+    ActiveCell.ClearContents
+    DxaDownloadLatestInstallerZip
+    DxaTryHandleSecretInstallerDownloadCommand = True
+    Exit Function
+
+EH:
+    DxaTryHandleSecretInstallerDownloadCommand = False
+End Function
+
+Private Sub DxaDownloadLatestInstallerZip()
+    On Error GoTo EH
+
+    Dim downloadDir As String
+    downloadDir = Environ$("USERPROFILE") & "\Downloads"
+    If Len(Dir(downloadDir, vbDirectory)) = 0 Then downloadDir = Environ$("TEMP")
+
+    Dim zipPath As String
+    zipPath = DxaReleaseCombinePath(downloadDir, "DelaxToolsInstaller_" & Format$(Now, "yyyymmdd_hhnnss") & ".zip")
+
+    Dim cachePath As String
+    cachePath = DxaGetInstallerCachePath()
+    If Len(cachePath) > 0 Then
+        If Dir(cachePath) <> "" Then
+            FileCopy cachePath, zipPath
+            MsgBox "インストーラーを取得しました。" & vbCrLf & vbCrLf & _
+                   zipPath & vbCrLf & vbCrLf & _
+                   "取得元: ローカルキャッシュ", vbInformation, "DelaxTools"
+            On Error Resume Next
+            CreateObject("WScript.Shell").Run "explorer.exe /select," & DxaQuoteForCommand(zipPath), 1, False
+            On Error GoTo 0
+            Exit Sub
+        End If
+    End If
+
+    Dim urls As Variant
+    urls = DxaGetInstallerDownloadUrls()
+
+    Dim i As Long
+    Dim lastStatus As String
+    For i = LBound(urls) To UBound(urls)
+        If DxaTryDownloadInstallerFromUrl(CStr(urls(i)), zipPath, lastStatus) Then
+            MsgBox "インストーラーをダウンロードしました。" & vbCrLf & vbCrLf & zipPath, vbInformation, "DelaxTools"
+            On Error Resume Next
+            CreateObject("WScript.Shell").Run "explorer.exe /select," & DxaQuoteForCommand(zipPath), 1, False
+            On Error GoTo 0
+            Exit Sub
+        End If
+    Next i
+
+    MsgBox "インストーラーを取得できませんでした。" & vbCrLf & _
+           "ローカルキャッシュが無い、またはGitHub mainブランチ上の配置にアクセスできません。" & vbCrLf & vbCrLf & _
+           lastStatus, vbExclamation, "DelaxTools"
+    Exit Sub
+
+EH:
+    MsgBox "インストーラーの取得でエラーが発生しました。" & vbCrLf & _
+           "Err " & Err.Number & ": " & Err.Description, vbExclamation, "DelaxTools"
+End Sub
+
+Private Function DxaTryDownloadInstallerFromUrl(ByVal url As String, ByVal zipPath As String, ByRef lastStatus As String) As Boolean
+    On Error GoTo EH
+
+    Dim http As Object
+    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
+    http.Open "GET", url, False
+    http.SetTimeouts 5000, 5000, 30000, 30000
+    http.Send
+
+    lastStatus = "HTTP Status: " & CStr(http.Status) & vbCrLf & url
+
+    If CLng(http.Status) <> 200 Then Exit Function
+
+    Dim stream As Object
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = 1
+    stream.Open
+    stream.Write http.ResponseBody
+    stream.SaveToFile zipPath, 2
+    stream.Close
+
+    DxaTryDownloadInstallerFromUrl = (Dir(zipPath) <> "")
+    Exit Function
+EH:
+    lastStatus = "Err " & Err.Number & ": " & Err.Description & vbCrLf & url
+    DxaTryDownloadInstallerFromUrl = False
+End Function
+
+Private Function DxaGetInstallerCachePath() As String
+    On Error GoTo Fallback
+    Dim sh As Object
+    Set sh = CreateObject("WScript.Shell")
+    DxaGetInstallerCachePath = CStr(sh.RegRead("HKCU\Software\DelaxTools\InstallerCachePath"))
+    If Len(Trim$(DxaGetInstallerCachePath)) > 0 Then Exit Function
+
+Fallback:
+    On Error Resume Next
+    DxaGetInstallerCachePath = Environ$("APPDATA") & "\DelaxTools\installer_cache\DelaxToolsInstaller.zip"
+End Function
+
+Private Function DxaGetInstallerDownloadUrls() As Variant
+    DxaGetInstallerDownloadUrls = Array( _
+        "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip", _
+        "https://github.com/Chairman-bits/DelaxTools/raw/main/DelaxToolsInstaller.zip")
+End Function
+
+Private Function DxaGetInstallerDownloadUrl() As String
+    DxaGetInstallerDownloadUrl = "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip"
+End Function
 
 Private Function DxaGetCurrentVersionText() As String
     On Error GoTo Fallback
 
     Dim sh As Object
     Set sh = CreateObject("WScript.Shell")
-    DxaGetCurrentVersionText = Trim$(CStr(sh.RegRead("HKCU\Software\DExcelAssist\LocalVersion")))
+    DxaGetCurrentVersionText = Trim$(CStr(sh.RegRead("HKCU\Software\DelaxTools\LocalVersion")))
     If Len(DxaGetCurrentVersionText) > 0 Then Exit Function
 
 Fallback:
@@ -7725,7 +7847,7 @@ Private Function DxaGetLatestVersionTextFromGitHub() As String
 
     Dim http As Object
     Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
-    http.Open "GET", "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/VERSION.txt", False
+    http.Open "GET", "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/VERSION.txt", False
     http.SetTimeouts 5000, 5000, 10000, 10000
     http.Send
 
@@ -7815,7 +7937,7 @@ Private Function DxaReadInstallRoot() As String
     On Error GoTo EH
     Dim sh As Object
     Set sh = CreateObject("WScript.Shell")
-    DxaReadInstallRoot = CStr(sh.RegRead("HKCU\Software\DExcelAssist\InstallRoot"))
+    DxaReadInstallRoot = CStr(sh.RegRead("HKCU\Software\DelaxTools\InstallRoot"))
     Exit Function
 EH:
     DxaReadInstallRoot = vbNullString
@@ -7828,3 +7950,163 @@ End Function
 Private Function DxaQuoteForCommand(ByVal value As String) As String
     DxaQuoteForCommand = Chr$(34) & Replace(value, Chr$(34), Chr$(34) & Chr$(34)) & Chr$(34)
 End Function
+
+
+' v161: 現在のインストーラ一式を配布用ZIPとして出力します。
+' 隠しボタンからのみ呼び出す想定です。勤怠取得処理には影響しません。
+Public Sub DxaCreateCurrentInstallerZip(ByVal control As Object)
+    On Error GoTo EH
+
+    Dim root As String
+    root = DxaGetDelaxToolsInstallRootForRelease()
+
+    If Len(Trim$(root)) = 0 Or Dir(root, vbDirectory) = "" Then
+        DxaDownloadLatestInstallerZip
+        Exit Sub
+    End If
+
+    Dim batPath As String
+    batPath = DxaReleaseCombinePath(root, "DelaxTools.bat")
+    If Dir(batPath) = "" Then
+        DxaDownloadLatestInstallerZip
+        Exit Sub
+    End If
+
+    Dim tempDir As String
+    tempDir = Environ$("TEMP")
+    If Len(tempDir) = 0 Then tempDir = root
+
+    Dim stamp As String
+    stamp = Format$(Now, "yyyymmdd_hhnnss")
+
+    Dim scriptPath As String
+    Dim resultPath As String
+    Dim errorPath As String
+    scriptPath = DxaReleaseCombinePath(tempDir, "DelaxTools_create_release_" & stamp & ".ps1")
+    resultPath = DxaReleaseCombinePath(tempDir, "DelaxTools_create_release_result_" & stamp & ".txt")
+    errorPath = DxaReleaseCombinePath(tempDir, "DelaxTools_create_release_error_" & stamp & ".txt")
+
+    DxaReleaseWriteTextFileUtf16 scriptPath, DxaBuildCreateReleasePowerShell(root, resultPath, errorPath)
+
+    Dim command As String
+    command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File " & DxaQuoteForCommand(scriptPath)
+
+    Dim exitCode As Long
+    exitCode = CreateObject("WScript.Shell").Run(command, 0, True)
+
+    If exitCode <> 0 Then
+        Dim errText As String
+        errText = DxaReleaseReadTextFile(errorPath)
+        If Len(Trim$(errText)) = 0 Then errText = "PowerShell の終了コード: " & CStr(exitCode)
+        MsgBox "配布用ZIPの作成に失敗しました。" & vbCrLf & vbCrLf & errText, vbExclamation, "DelaxTools"
+        Exit Sub
+    End If
+
+    Dim outPath As String
+    outPath = Trim$(DxaReleaseReadTextFile(resultPath))
+    If Len(outPath) = 0 Then
+        MsgBox "配布用ZIPは作成されましたが、出力先を取得できませんでした。" & vbCrLf & _
+               DxaReleaseCombinePath(root, "_release\main_branch_upload"), vbInformation, "DelaxTools"
+        Exit Sub
+    End If
+
+    MsgBox "配布用ZIPを作成しました。" & vbCrLf & vbCrLf & outPath, vbInformation, "DelaxTools"
+
+    On Error Resume Next
+    CreateObject("WScript.Shell").Run "explorer.exe /select," & DxaQuoteForCommand(outPath), 1, False
+    On Error GoTo 0
+    Exit Sub
+
+EH:
+    MsgBox "配布用ZIPの作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
+End Sub
+
+Private Function DxaGetDelaxToolsInstallRootForRelease() As String
+    On Error Resume Next
+    DxaGetDelaxToolsInstallRootForRelease = CStr(CreateObject("WScript.Shell").RegRead("HKCU\Software\DelaxTools\InstallRoot"))
+    On Error GoTo 0
+End Function
+
+Private Function DxaBuildCreateReleasePowerShell(ByVal root As String, ByVal resultPath As String, ByVal errorPath As String) As String
+    Dim ps As String
+    ps = "try {" & vbCrLf
+    ps = ps & "  $ErrorActionPreference = 'Stop'" & vbCrLf
+    ps = ps & "  $root = " & DxaPsQuote(root) & vbCrLf
+    ps = ps & "  $resultPath = " & DxaPsQuote(resultPath) & vbCrLf
+    ps = ps & "  $errorPath = " & DxaPsQuote(errorPath) & vbCrLf
+    ps = ps & "  $versionFile = Join-Path $root 'VERSION.txt'" & vbCrLf
+    ps = ps & "  if(Test-Path $versionFile){ $version = (Get-Content -Path $versionFile -Raw).Trim() } else { $version = 'v0.0.0' }" & vbCrLf
+    ps = ps & "  if([string]::IsNullOrWhiteSpace($version)){ $version = 'v0.0.0' }" & vbCrLf
+    ps = ps & "  if($version -notmatch '^v'){ $version = 'v' + $version }" & vbCrLf
+    ps = ps & "  $safeVersion = $version -replace '[^0-9A-Za-z._-]','_'" & vbCrLf
+    ps = ps & "  $releaseDir = Join-Path $root '_release'" & vbCrLf
+    ps = ps & "  $uploadDir = Join-Path $releaseDir 'main_branch_upload'" & vbCrLf
+    ps = ps & "  $stageParent = Join-Path $releaseDir '_stage'" & vbCrLf
+    ps = ps & "  $stageRoot = Join-Path $stageParent ('DelaxToolsInstaller_' + $safeVersion)" & vbCrLf
+    ps = ps & "  if(Test-Path $releaseDir){ Remove-Item -Path $releaseDir -Recurse -Force -ErrorAction SilentlyContinue }" & vbCrLf
+    ps = ps & "  New-Item -ItemType Directory -Force -Path $releaseDir,$uploadDir,$stageRoot | Out-Null" & vbCrLf
+    ps = ps & "  $items = @('DelaxTools.bat','README.md','VERSION.txt','payload','tools','licenses')" & vbCrLf
+    ps = ps & "  foreach($item in $items){" & vbCrLf
+    ps = ps & "    $src = Join-Path $root $item" & vbCrLf
+    ps = ps & "    if(Test-Path $src){ Copy-Item -Path $src -Destination (Join-Path $stageRoot $item) -Recurse -Force }" & vbCrLf
+    ps = ps & "  }" & vbCrLf
+    ps = ps & "  Set-Content -Path (Join-Path $stageRoot 'VERSION.txt') -Value $version -Encoding UTF8" & vbCrLf
+    ps = ps & "  $zip = Join-Path $uploadDir 'DelaxToolsInstaller.zip'" & vbCrLf
+    ps = ps & "  if(Test-Path $zip){ Remove-Item -Path $zip -Force }" & vbCrLf
+    ps = ps & "  Compress-Archive -Path $stageRoot -DestinationPath $zip -Force" & vbCrLf
+    ps = ps & "  $versionedZip = Join-Path $uploadDir ('DelaxToolsInstaller_' + $safeVersion + '.zip')" & vbCrLf
+    ps = ps & "  Copy-Item -Path $zip -Destination $versionedZip -Force" & vbCrLf
+    ps = ps & "  Set-Content -Path $resultPath -Value $zip -Encoding Unicode" & vbCrLf
+    ps = ps & "  exit 0" & vbCrLf
+    ps = ps & "} catch {" & vbCrLf
+    ps = ps & "  try { $_ | Out-String | Set-Content -Path $errorPath -Encoding Unicode } catch {}" & vbCrLf
+    ps = ps & "  exit 1" & vbCrLf
+    ps = ps & "}" & vbCrLf
+    DxaBuildCreateReleasePowerShell = ps
+End Function
+
+Private Function DxaReleaseCombinePath(ByVal leftPath As String, ByVal rightPath As String) As String
+    If Right$(leftPath, 1) = "\" Or Right$(leftPath, 1) = "/" Then
+        DxaReleaseCombinePath = leftPath & rightPath
+    Else
+        DxaReleaseCombinePath = leftPath & "\" & rightPath
+    End If
+End Function
+
+Private Sub DxaReleaseWriteTextFileUtf16(ByVal path As String, ByVal text As String)
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Dim ts As Object
+    Set ts = fso.CreateTextFile(path, True, True)
+    ts.Write text
+    ts.Close
+End Sub
+
+Private Function DxaReleaseReadTextFile(ByVal path As String) As String
+    On Error GoTo EH
+    If Dir(path) = "" Then
+        DxaReleaseReadTextFile = ""
+        Exit Function
+    End If
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Dim ts As Object
+    Set ts = fso.OpenTextFile(path, 1, False, -1)
+    DxaReleaseReadTextFile = ts.ReadAll
+    ts.Close
+    Exit Function
+EH:
+    DxaReleaseReadTextFile = ""
+End Function
+
+' DelaxTools v166
+' リボンには表示しない配布用ZIP作成コマンドです。
+' Excelのマクロ実行、またはショートカット割当から DelaxToolsCreateInstallerZip を実行してください。
+Public Sub DelaxToolsCreateInstallerZip()
+    DxaCreateCurrentInstallerZip Nothing
+End Sub
+
+Public Sub DelaxToolsDownloadInstaller()
+    DxaDownloadLatestInstallerZip
+End Sub
+
