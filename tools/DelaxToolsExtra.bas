@@ -2,11 +2,25 @@ Attribute VB_Name = "DelaxToolsExtra"
 
 Option Explicit
 
+Private Const DxaChangeHistoryDisabledV173Marker As String = "v173"
+
 ' DelaxTools change-history event state.
-' DelaxTools v166
+' DelaxTools v172
 ' Module-level declarations must be placed before all procedures.
 Private gDxaEvents As DelaxToolsAppEvents
 Private gDxaSessionId As String
+Private gDxaSnapshotQueue As Collection
+Private gDxaSnapshotScheduled As Boolean
+Private gDxaPreChangeMap As Object
+Private gDxaPreChangeWorkbookKey As String
+Private gDxaLoggedChangeKeys As Object
+Private gDxaLoggedChangeWorkbookKey As String
+Private gDxaLastSelectionCaptureKey As String
+Private gDxaLastSelectionCaptureAt As Double
+Private Const DxaSelectionCaptureMaxCells As Long = 50
+Private Const DxaChangePersistMaxCells As Long = 500
+Private gDxaCleanupDone As Boolean
+Private Const DXA_SNAPSHOT_DELAY_SECONDS As Double = 8
 
 
 #If VBA7 Then
@@ -1610,103 +1624,177 @@ End Function
 ' ============================================================
 
 Public Sub Auto_Open()
-    On Error Resume Next
-    DxaInitChangeHistoryEvents
+    ' v172: Excel起動を重くしないため、常駐イベント監視は開始しません。
 End Sub
 
 Public Sub Auto_Close()
-    On Error Resume Next
-    DxaDeleteCurrentSessionSnapshots
+    ' v172: 終了時のスナップショット掃除も自動実行しません。
 End Sub
 
 Public Sub DxaInitChangeHistoryEvents()
+    ' v172: 重量化原因を一旦すべて削除するため、イベント監視・自動記録は無効化します。
     On Error Resume Next
-    If Len(gDxaSessionId) = 0 Then gDxaSessionId = Format$(Now, "yyyymmddhhnnss") & "_" & CStr(Int(Rnd() * 1000000))
-    If gDxaEvents Is Nothing Then
-        Set gDxaEvents = New DelaxToolsAppEvents
-        gDxaEvents.Init Application
-    End If
-
-    DxaCleanupOldChangeSnapshots
-
-    Dim wb As Workbook
-    For Each wb In Application.Workbooks
-        If Not DxaIsWorkbookExcluded(wb) Then
-            DxaEnsureSnapshotForWorkbook wb
-        End If
-    Next
+    Set gDxaEvents = Nothing
+    Set gDxaSnapshotQueue = Nothing
+    Set gDxaPreChangeMap = Nothing
+    Set gDxaLoggedChangeKeys = Nothing
+    gDxaSnapshotScheduled = False
+    gDxaPreChangeWorkbookKey = ""
+    gDxaLoggedChangeWorkbookKey = ""
+    gDxaLastSelectionCaptureKey = ""
+    gDxaLastSelectionCaptureAt = 0
 End Sub
 
-Public Sub DxaEnsureSnapshotForWorkbook(ByVal wb As Workbook)
-    On Error GoTo EH
-    If wb Is Nothing Then Exit Sub
-    If DxaIsWorkbookExcluded(wb) Then Exit Sub
-    If Len(gDxaSessionId) = 0 Then DxaInitChangeHistoryEvents
 
-    Dim path As String
-    path = DxaSnapshotPathForWorkbook(wb)
-    If Len(path) = 0 Then Exit Sub
-    If DxaFileExists(path) Then Exit Sub
+Public Sub DxaCapturePreChangeRange(ByVal target As Range)
+    ' v172: セル選択時の常駐処理は行いません。
+End Sub
 
-    Dim text As String
-    text = DxaBuildSnapshotText(wb)
-    DxaWriteTextUtf8 path, text
+Private Sub DxaPutPreChangeCellRecord(ByVal cell As Range)
+    On Error Resume Next
+    If gDxaPreChangeMap Is Nothing Then Exit Sub
+    Dim key As String
+    key = cell.Worksheet.Name & "!" & cell.Address(False, False)
+    gDxaPreChangeMap(key) = DxaBuildSnapshotRecordForCell(cell, True)
+End Sub
+
+Public Sub DxaPersistPreChangeForTarget(ByVal target As Range)
+    ' v172: セル変更時の常駐処理は行いません。
+End Sub
+
+Private Function DxaBuildSnapshotRecordForCell(ByVal cell As Range, Optional ByVal includeBlank As Boolean = False) As String
+    On Error Resume Next
+    If cell Is Nothing Then Exit Function
+    If Not includeBlank Then
+        If Not DxaCellHasSnapshotValue(cell) Then Exit Function
+    End If
+    DxaBuildSnapshotRecordForCell = DxaJoinSnapshotFields(Array( _
+        DxaEsc(cell.Worksheet.Name), _
+        DxaEsc(cell.Address(False, False)), _
+        CStr(cell.Row), _
+        CStr(cell.Column), _
+        DxaEsc(DxaGetHeaderText(cell.Worksheet, cell.Column)), _
+        DxaEsc(DxaGetRowItemText(cell.Worksheet, cell.Row)), _
+        DxaEsc(DxaCellFormulaText(cell)), _
+        DxaEsc(DxaCellValueText(cell)), _
+        DxaEsc(DxaCellDisplayText(cell)), _
+        DxaEsc(DxaCellLinkText(cell)), _
+        DxaEsc(DxaCellCommentText(cell)) _
+    ))
+End Function
+
+Private Sub DxaAppendTextUtf8(ByVal path As String, ByVal text As String)
+    On Error GoTo Fallback
+    If Len(text) = 0 Then Exit Sub
+
+    Dim bytes As Variant
+    bytes = DxaUtf8BytesNoBom(text)
+
+    Dim stm As Object
+    Set stm = CreateObject("ADODB.Stream")
+    stm.Type = 1
+    stm.Open
+    If DxaFileExists(path) Then stm.LoadFromFile path
+    stm.Position = stm.Size
+    stm.Write bytes
+    stm.SaveToFile path, 2
+    stm.Close
     Exit Sub
-EH:
+
+Fallback:
+    On Error Resume Next
+    Dim currentText As String
+    If DxaFileExists(path) Then currentText = DxaReadTextUtf8(path)
+    DxaWriteTextUtf8 path, currentText & text
+End Sub
+
+Private Function DxaUtf8BytesNoBom(ByVal text As String) As Variant
+    Dim stm As Object
+    Set stm = CreateObject("ADODB.Stream")
+    stm.Type = 2
+    stm.Charset = "utf-8"
+    stm.Open
+    stm.WriteText text
+    stm.Position = 0
+    stm.Type = 1
+
+    Dim bytes As Variant
+    bytes = stm.Read
+    stm.Close
+
+    On Error Resume Next
+    If IsArray(bytes) Then
+        If UBound(bytes) >= 2 Then
+            If bytes(0) = &HEF And bytes(1) = &HBB And bytes(2) = &HBF Then
+                Dim trimmed() As Byte
+                Dim i As Long
+                ReDim trimmed(0 To UBound(bytes) - 3)
+                For i = 3 To UBound(bytes)
+                    trimmed(i - 3) = bytes(i)
+                Next i
+                DxaUtf8BytesNoBom = trimmed
+                Exit Function
+            End If
+        End If
+    End If
+
+    DxaUtf8BytesNoBom = bytes
+End Function
+
+Public Sub DxaQueueSnapshotForWorkbook(ByVal wb As Workbook)
+    ' v172: 全ブック/全シートの自動スナップショットは行いません。
+    '       変更履歴は選択・変更されたセルだけを軽量記録します。
+End Sub
+
+Private Function DxaSnapshotQueueContains(ByVal key As String) As Boolean
+    On Error Resume Next
+    Dim i As Long
+    If gDxaSnapshotQueue Is Nothing Then Exit Function
+    For i = 1 To gDxaSnapshotQueue.Count
+        If CStr(gDxaSnapshotQueue(i)) = key Then DxaSnapshotQueueContains = True: Exit Function
+    Next
+End Function
+
+Private Sub DxaScheduleSnapshotProcessor()
+    ' v172: 自動スナップショット予約は使用しません。
+End Sub
+
+Public Sub DxaProcessQueuedSnapshot()
+    ' v172: 自動スナップショット処理は使用しません。
+End Sub
+
+Private Function DxaWorkbookRuntimeKey(ByVal wb As Workbook) As String
+    On Error Resume Next
+    If wb Is Nothing Then Exit Function
+    If Len(wb.FullName) > 0 Then
+        DxaWorkbookRuntimeKey = wb.FullName
+    Else
+        DxaWorkbookRuntimeKey = wb.Name
+    End If
+End Function
+
+Private Function DxaFindWorkbookByRuntimeKey(ByVal key As String) As Workbook
+    On Error Resume Next
+    Dim wb As Workbook
+    For Each wb In Application.Workbooks
+        If DxaWorkbookRuntimeKey(wb) = key Then
+            Set DxaFindWorkbookByRuntimeKey = wb
+            Exit Function
+        End If
+    Next
+End Function
+
+Public Sub DxaEnsureSnapshotForWorkbook(ByVal wb As Workbook)
+    ' v172: 全シート走査を発生させないため、自動スナップショットは作成しません。
 End Sub
 
 Public Sub DxaDeleteSnapshotForWorkbook(ByVal wb As Workbook)
-    On Error Resume Next
-    If wb Is Nothing Then Exit Sub
-    If Len(gDxaSessionId) = 0 Then Exit Sub
-    Dim path As String
-    path = DxaSnapshotPathForWorkbook(wb)
-    If Len(path) > 0 Then
-        If DxaFileExists(path) Then Kill path
-    End If
+    ' v172: 終了時のファイル操作を行わないため、自動削除は行いません。
 End Sub
 
 Public Sub DxaCreateChangeHistory(ByVal control As Object)
-    On Error GoTo EH
-    DxaInitChangeHistoryEvents
-
-    Dim wb As Workbook
-    Set wb = ActiveWorkbook
-    If wb Is Nothing Then Exit Sub
-    If DxaIsWorkbookExcluded(wb) Then
-        MsgBox "変更履歴作成の対象ブックを開いてから実行してください。", vbExclamation, "DelaxTools"
-        Exit Sub
-    End If
-
-    Dim snapshotPath As String
-    snapshotPath = DxaSnapshotPathForWorkbook(wb)
-    If Len(snapshotPath) = 0 Or Not DxaFileExists(snapshotPath) Then
-        DxaEnsureSnapshotForWorkbook wb
-        MsgBox "変更前状態が未作成だったため、現在の状態を自動保存しました。編集後に再度『変更履歴作成』を実行してください。" & vbCrLf & vbCrLf & _
-               "※元ブックにはシートを追加していません。", vbInformation, "DelaxTools"
-        Exit Sub
-    End If
-
-    Dim oldMap As Object
-    Set oldMap = DxaReadSnapshotMap(snapshotPath)
-
-    Dim curMap As Object
-    Set curMap = DxaBuildSnapshotMap(wb)
-
-    Dim details As Collection
-    Set details = DxaCompareSnapshotMaps(oldMap, curMap)
-
-    If details.Count = 0 Then
-        MsgBox "変更は検出されませんでした。", vbInformation, "DelaxTools"
-        Exit Sub
-    End If
-
-    DxaOutputChangeHistoryWorkbook wb, details
-    MsgBox "変更履歴貼付用ブックを作成しました。" & vbCrLf & _
-           "元ブックにはシートを追加していません。", vbInformation, "DelaxTools"
-    Exit Sub
-EH:
-    MsgBox "変更履歴作成でエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, "DelaxTools"
+    MsgBox "Excelが重くなる原因を切り分けるため、変更履歴機能はv172で一時停止しています。" & vbCrLf & _
+           "勤怠取得など他の機能はそのまま使用できます。", vbInformation, "DelaxTools"
 End Sub
 
 Private Function DxaIsWorkbookExcluded(ByVal wb As Workbook) As Boolean
@@ -1714,6 +1802,7 @@ Private Function DxaIsWorkbookExcluded(ByVal wb As Workbook) As Boolean
     If wb Is Nothing Then DxaIsWorkbookExcluded = True: Exit Function
     If wb.IsAddin Then DxaIsWorkbookExcluded = True: Exit Function
     If LCase$(wb.Name) = "dexcelassist.xlam" Then DxaIsWorkbookExcluded = True: Exit Function
+    If LCase$(wb.Name) = "delaxtools.xlam" Then DxaIsWorkbookExcluded = True: Exit Function
     If LCase$(wb.Name) Like "変更履歴出力_*" Then DxaIsWorkbookExcluded = True: Exit Function
     If LCase$(wb.Name) Like "book*" And wb.Path = "" Then
         ' 新規ブックも対象にはできますが、誤検知を避けるため開いた直後の空ブックは除外します。
@@ -1774,6 +1863,117 @@ Private Function DxaBuildSnapshotMap(ByVal wb As Workbook) As Object
     Set DxaBuildSnapshotMap = dict
 End Function
 
+Private Function DxaBuildSnapshotMapForKeys(ByVal wb As Workbook, ByVal oldMap As Object) As Object
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+
+    On Error GoTo EH
+    If wb Is Nothing Then
+        Set DxaBuildSnapshotMapForKeys = dict
+        Exit Function
+    End If
+    If oldMap Is Nothing Then
+        Set DxaBuildSnapshotMapForKeys = dict
+        Exit Function
+    End If
+
+    Dim k As Variant
+    Dim keyText As String
+    Dim pos As Long
+    Dim sheetName As String
+    Dim addr As String
+    Dim ws As Worksheet
+    Dim cell As Range
+
+    For Each k In oldMap.Keys
+        keyText = CStr(k)
+        pos = InStrRev(keyText, "!")
+        If pos > 1 Then
+            sheetName = Left$(keyText, pos - 1)
+            addr = Mid$(keyText, pos + 1)
+
+            Set ws = Nothing
+            On Error Resume Next
+            Set ws = wb.Worksheets(sheetName)
+            On Error GoTo EH
+
+            If Not ws Is Nothing Then
+                Set cell = Nothing
+                On Error Resume Next
+                Set cell = ws.Range(addr)
+                On Error GoTo EH
+
+                If Not cell Is Nothing Then
+                    dict(keyText) = DxaBuildSnapshotRecordForCell(cell, True)
+                End If
+            End If
+        End If
+    Next
+
+    Set DxaBuildSnapshotMapForKeys = dict
+    Exit Function
+EH:
+    Set DxaBuildSnapshotMapForKeys = dict
+End Function
+
+Private Sub DxaEnsureChangeSnapshotLog(ByVal wb As Workbook, ByVal path As String)
+    On Error Resume Next
+
+    Dim wbKey As String
+    wbKey = DxaWorkbookRuntimeKey(wb)
+
+    If gDxaLoggedChangeKeys Is Nothing Or gDxaLoggedChangeWorkbookKey <> wbKey Then
+        Set gDxaLoggedChangeKeys = DxaReadSnapshotKeys(path)
+        gDxaLoggedChangeWorkbookKey = wbKey
+    End If
+
+    If Not DxaFileExists(path) Then
+        DxaWriteTextUtf8 path, "Key" & vbTab & "Sheet" & vbTab & "Address" & vbTab & "Row" & vbTab & "Column" & vbTab & "Header" & vbTab & "Item" & vbTab & "Formula" & vbTab & "Value" & vbTab & "Text" & vbTab & "Link" & vbTab & "Comment" & vbCrLf
+        If gDxaLoggedChangeKeys Is Nothing Then Set gDxaLoggedChangeKeys = CreateObject("Scripting.Dictionary")
+    End If
+End Sub
+
+Private Function DxaReadSnapshotKeys(ByVal path As String) As Object
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+
+    On Error GoTo EH
+    If Not DxaFileExists(path) Then
+        Set DxaReadSnapshotKeys = dict
+        Exit Function
+    End If
+
+    Dim text As String
+    text = DxaReadTextUtf8(path)
+
+    Dim lines As Variant
+    lines = Split(text, vbLf)
+
+    Dim i As Long
+    For i = LBound(lines) To UBound(lines)
+        Dim lineText As String
+        lineText = Replace(CStr(lines(i)), vbCr, "")
+        If i > 0 And Len(lineText) > 0 Then
+            Dim parts As Variant
+            parts = Split(lineText, vbTab)
+            If UBound(parts) >= 0 Then dict(CStr(parts(0))) = True
+        End If
+    Next
+
+    Set DxaReadSnapshotKeys = dict
+    Exit Function
+EH:
+    Set DxaReadSnapshotKeys = dict
+End Function
+
+Private Function DxaRangeCellCountLarge(ByVal rng As Range) As Double
+    On Error GoTo EH
+    DxaRangeCellCountLarge = CDbl(rng.CountLarge)
+    Exit Function
+EH:
+    DxaRangeCellCountLarge = 1000000000#
+End Function
+
 Private Sub DxaAddSheetSnapshot(ByVal dict As Object, ByVal ws As Worksheet)
     On Error GoTo EH
     Dim ur As Range
@@ -1801,19 +2001,7 @@ Private Sub DxaAddSheetSnapshot(ByVal dict As Object, ByVal ws As Worksheet)
                 Dim itemText As String
                 itemText = DxaGetRowItemText(ws, r)
 
-                dict(key) = DxaJoinSnapshotFields(Array( _
-                    DxaEsc(ws.Name), _
-                    DxaEsc(cell.Address(False, False)), _
-                    CStr(r), _
-                    CStr(c), _
-                    DxaEsc(headerText), _
-                    DxaEsc(itemText), _
-                    DxaEsc(DxaCellFormulaText(cell)), _
-                    DxaEsc(DxaCellValueText(cell)), _
-                    DxaEsc(DxaCellDisplayText(cell)), _
-                    DxaEsc(DxaCellLinkText(cell)), _
-                    DxaEsc(DxaCellCommentText(cell)) _
-                ))
+                dict(key) = DxaBuildSnapshotRecordForCell(cell, False)
             End If
         Next c
     Next r
@@ -1913,17 +2101,14 @@ Private Function DxaCompareSnapshotMaps(ByVal oldMap As Object, ByVal curMap As 
     Dim details As New Collection
     Dim k As Variant
 
+    ' v169:
+    ' 起動時の全量スナップショットを廃止し、変更されたセルの変更前ログだけを比較します。
+    ' これにより、Excel起動直後や数秒後に全シート走査が走らず、重くなりません。
     For Each k In oldMap.Keys
         If Not curMap.Exists(k) Then
             details.Add DxaBuildChangeDetail(CStr(k), "削除", oldMap(k), "")
         ElseIf DxaSnapshotComparableText(oldMap(k)) <> DxaSnapshotComparableText(curMap(k)) Then
             details.Add DxaBuildChangeDetail(CStr(k), DxaDetectChangeType(oldMap(k), curMap(k)), oldMap(k), curMap(k))
-        End If
-    Next
-
-    For Each k In curMap.Keys
-        If Not oldMap.Exists(k) Then
-            details.Add DxaBuildChangeDetail(CStr(k), "追加", "", curMap(k))
         End If
     Next
 
@@ -2270,6 +2455,8 @@ End Sub
 
 Private Sub DxaCleanupOldChangeSnapshots()
     On Error Resume Next
+    If gDxaCleanupDone Then Exit Sub
+    gDxaCleanupDone = True
     Dim dirPath As String
     dirPath = DxaChangeSnapshotDir()
     Dim f As String
@@ -7609,7 +7796,7 @@ End Sub
 
 
 
-' DelaxTools v115
+' DelaxTools v173
 ' GitHub mainブランチのVERSION.txtを確認し、現在より新しい場合だけ確認ダイアログを表示してアップデートします。
 Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     On Error GoTo EH
@@ -7617,17 +7804,21 @@ Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     If DxaTryHandleSecretInstallerDownloadCommand() Then Exit Sub
 
     Dim currentVersion As String
+    Dim latestVersionRaw As String
     Dim latestVersion As String
 
     currentVersion = DxaNormalizeVersionText(DxaGetCurrentVersionText())
-    latestVersion = DxaNormalizeVersionText(DxaGetLatestVersionTextFromGitHub())
+    latestVersionRaw = DxaGetLatestVersionTextFromGitHub()
 
-    If Len(Trim$(latestVersion)) = 0 Then
-        MsgBox "GitHub mainブランチのVERSION.txtを取得できませんでした。" & vbCrLf & _
-               "ネットワーク接続、またはGitHub mainブランチの配置を確認してください。", _
+    If Len(Trim$(latestVersionRaw)) = 0 Then
+        MsgBox "最新バージョンを取得できませんでした。" & vbCrLf & _
+               "GitHub上の VERSION.txt、リポジトリ名、ネットワーク接続を確認してください。" & vbCrLf & vbCrLf & _
+               "現在のバージョン: " & currentVersion, _
                vbExclamation, "DelaxTools アップデート確認"
         Exit Sub
     End If
+
+    latestVersion = DxaNormalizeVersionText(latestVersionRaw)
 
     If DxaCompareVersionText(currentVersion, latestVersion) >= 0 Then
         MsgBox "DelaxToolsは最新です。" & vbCrLf & vbCrLf & _
@@ -7669,7 +7860,8 @@ Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command " & _
             DxaQuoteForCommand("$ErrorActionPreference='Stop'; " & _
             "New-Item -ItemType Directory -Force -Path " & DxaPsQuote(tempDir) & " | Out-Null; " & _
-            "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip' -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; " & _
+            "$urls=@('https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip','https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DelaxToolsInstaller.zip','https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip'); " & _
+            "$ok=$false; $last=''; foreach($u in $urls){ try{ Invoke-WebRequest -Uri $u -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; if(Test-Path " & DxaPsQuote(zipPath) & "){ $ok=$true; break } } catch { $last=$_.Exception.Message } }; if(-not $ok){ throw ('インストーラーZIPをダウンロードできませんでした。' + $last) }; " & _
             "Expand-Archive -Path " & DxaPsQuote(zipPath) & " -DestinationPath " & DxaPsQuote(tempDir) & " -Force; " & _
             "$bat = Get-ChildItem -Path " & DxaPsQuote(tempDir) & " -Recurse -Filter 'DelaxTools.bat' | Select-Object -First 1; " & _
             "if($null -eq $bat){ throw 'DelaxTools.bat が見つかりません。' }; " & _
@@ -7808,7 +8000,11 @@ End Function
 Private Function DxaGetInstallerDownloadUrls() As Variant
     DxaGetInstallerDownloadUrls = Array( _
         "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip", _
-        "https://github.com/Chairman-bits/DelaxTools/raw/main/DelaxToolsInstaller.zip")
+        "https://github.com/Chairman-bits/DelaxTools/raw/main/DelaxToolsInstaller.zip", _
+        "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DelaxToolsInstaller.zip", _
+        "https://github.com/Chairman-bits/DExcelAssist/raw/main/DelaxToolsInstaller.zip", _
+        "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip", _
+        "https://github.com/Chairman-bits/DExcelAssist/raw/main/DExcelAssistInstaller.zip")
 End Function
 
 Private Function DxaGetInstallerDownloadUrl() As String
@@ -7845,21 +8041,90 @@ End Function
 Private Function DxaGetLatestVersionTextFromGitHub() As String
     On Error GoTo EH
 
-    Dim http As Object
-    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
-    http.Open "GET", "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/VERSION.txt", False
-    http.SetTimeouts 5000, 5000, 10000, 10000
-    http.Send
+    Dim urls As Variant
+    Dim i As Long
+    Dim versionText As String
+    Dim lastStatus As String
 
-    If CLng(http.Status) <> 200 Then
-        DxaGetLatestVersionTextFromGitHub = vbNullString
-    Else
-        DxaGetLatestVersionTextFromGitHub = Trim$(CStr(http.ResponseText))
-    End If
+    urls = DxaGetLatestVersionDownloadUrls()
+
+    For i = LBound(urls) To UBound(urls)
+        versionText = vbNullString
+        If DxaTryGetLatestVersionFromUrl(CStr(urls(i)), versionText, lastStatus) Then
+            DxaGetLatestVersionTextFromGitHub = Trim$(versionText)
+            Exit Function
+        End If
+    Next i
+
+    DxaGetLatestVersionTextFromGitHub = vbNullString
     Exit Function
 
 EH:
     DxaGetLatestVersionTextFromGitHub = vbNullString
+End Function
+
+Private Function DxaGetLatestVersionDownloadUrls() As Variant
+    DxaGetLatestVersionDownloadUrls = Array( _
+        "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/VERSION.txt", _
+        "https://github.com/Chairman-bits/DelaxTools/raw/main/VERSION.txt", _
+        "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/VERSION.txt", _
+        "https://github.com/Chairman-bits/DExcelAssist/raw/main/VERSION.txt")
+End Function
+
+Private Function DxaTryGetLatestVersionFromUrl(ByVal url As String, ByRef versionText As String, ByRef lastStatus As String) As Boolean
+    On Error GoTo EH
+
+    Dim http As Object
+    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
+    http.Open "GET", url & "?t=" & Format$(Now, "yyyymmddhhnnss"), False
+    http.SetTimeouts 5000, 5000, 10000, 10000
+    http.SetRequestHeader "Cache-Control", "no-cache"
+    http.SetRequestHeader "Pragma", "no-cache"
+    http.SetRequestHeader "User-Agent", "Mozilla/5.0 DelaxToolsUpdateCheck"
+    http.Send
+
+    lastStatus = "HTTP Status: " & CStr(http.Status) & vbCrLf & url
+
+    If CLng(http.Status) <> 200 Then Exit Function
+
+    versionText = Trim$(CStr(http.ResponseText))
+    versionText = Replace(versionText, ChrW$(&HFEFF), vbNullString)
+    versionText = Replace(versionText, vbCr, vbNullString)
+    versionText = Split(versionText, vbLf)(0)
+    versionText = Trim$(versionText)
+
+    If Not DxaLooksLikeVersionText(versionText) Then Exit Function
+
+    DxaTryGetLatestVersionFromUrl = True
+    Exit Function
+EH:
+    lastStatus = "Err " & Err.Number & ": " & Err.Description & vbCrLf & url
+    DxaTryGetLatestVersionFromUrl = False
+End Function
+
+Private Function DxaLooksLikeVersionText(ByVal versionText As String) As Boolean
+    Dim s As String
+    Dim i As Long
+    Dim ch As String
+
+    s = Trim$(CStr(versionText))
+    If Len(s) = 0 Then Exit Function
+    If Len(s) > 30 Then Exit Function
+
+    For i = 1 To Len(s)
+        ch = Mid$(s, i, 1)
+        If Not ((ch >= "0" And ch <= "9") Or ch = "." Or ch = "v" Or ch = "V" Or ch = "_" Or ch = "-" Or ch = " ") Then
+            Exit Function
+        End If
+    Next i
+
+    For i = 1 To Len(s)
+        ch = Mid$(s, i, 1)
+        If ch >= "0" And ch <= "9" Then
+            DxaLooksLikeVersionText = True
+            Exit Function
+        End If
+    Next i
 End Function
 
 Private Function DxaNormalizeVersionText(ByVal versionText As String) As String
@@ -8099,7 +8364,7 @@ EH:
     DxaReleaseReadTextFile = ""
 End Function
 
-' DelaxTools v166
+' DelaxTools v172
 ' リボンには表示しない配布用ZIP作成コマンドです。
 ' Excelのマクロ実行、またはショートカット割当から DelaxToolsCreateInstallerZip を実行してください。
 Public Sub DelaxToolsCreateInstallerZip()

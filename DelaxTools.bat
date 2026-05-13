@@ -2,13 +2,13 @@
 setlocal EnableExtensions DisableDelayedExpansion
 
 rem ==================================================
-rem DelaxTools Installer v166
+rem DelaxTools Installer v173
 rem - 文字化け・改行形式による即終了を避けるため、内部処理を単純化
 rem - エラー時も画面を閉じず、必ず停止して確認できるようにする
 rem ==================================================
 
 chcp 932 >nul
-title DelaxTools v166 インストーラー
+title DelaxTools v173 インストーラー
 
 pushd "%~dp0" >nul 2>&1
 if errorlevel 1 goto ROOT_ERROR
@@ -23,7 +23,7 @@ if /i "%~1"=="/mainbranch" goto ARG_RELEASE
 :MENU
 cls
 echo ========================================
-echo DelaxTools v166 インストーラー
+echo DelaxTools v173 インストーラー
 echo ========================================
 echo.
 echo 1: インストール / 修復
