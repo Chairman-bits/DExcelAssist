@@ -2,7 +2,7 @@ Attribute VB_Name = "DelaxToolsExtra"
 
 Option Explicit
 
-Private Const DxaChangeHistoryDisabledV173Marker As String = "v173"
+Private Const DxaChangeHistoryDisabledV186Marker As String = "v186"
 
 ' DelaxTools change-history event state.
 ' DelaxTools v172
@@ -21,6 +21,9 @@ Private Const DxaSelectionCaptureMaxCells As Long = 50
 Private Const DxaChangePersistMaxCells As Long = 500
 Private gDxaCleanupDone As Boolean
 Private Const DXA_SNAPSHOT_DELAY_SECONDS As Double = 8
+Private gDxaRibbon As Object
+Private gDxaStealthRibbonKeyStage As String
+Private gDxaStealthRibbonKeyStageAt As Double
 
 
 #If VBA7 Then
@@ -1624,11 +1627,15 @@ End Function
 ' ============================================================
 
 Public Sub Auto_Open()
-    ' v172: Excel起動を重くしないため、常駐イベント監視は開始しません。
+    ' v186: 起動時の重い常駐処理は開始せず、リボン表示切替ショートカットだけ登録します。
+    On Error Resume Next
+    DxaRegisterStealthRibbonHotKey
 End Sub
 
 Public Sub Auto_Close()
-    ' v172: 終了時のスナップショット掃除も自動実行しません。
+    ' v186: 終了時も重いスナップショット処理は実行せず、ショートカットだけ解除します。
+    On Error Resume Next
+    DxaUnregisterStealthRibbonHotKey
 End Sub
 
 Public Sub DxaInitChangeHistoryEvents()
@@ -7796,12 +7803,10 @@ End Sub
 
 
 
-' DelaxTools v173
+' DelaxTools v115
 ' GitHub mainブランチのVERSION.txtを確認し、現在より新しい場合だけ確認ダイアログを表示してアップデートします。
 Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     On Error GoTo EH
-
-    If DxaTryHandleSecretInstallerDownloadCommand() Then Exit Sub
 
     Dim currentVersion As String
     Dim latestVersionRaw As String
@@ -7812,7 +7817,7 @@ Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
 
     If Len(Trim$(latestVersionRaw)) = 0 Then
         MsgBox "最新バージョンを取得できませんでした。" & vbCrLf & _
-               "GitHub上の VERSION.txt、リポジトリ名、ネットワーク接続を確認してください。" & vbCrLf & vbCrLf & _
+               "GitHubのVERSION.txt、ネットワーク接続、リポジトリ配置を確認してください。" & vbCrLf & vbCrLf & _
                "現在のバージョン: " & currentVersion, _
                vbExclamation, "DelaxTools アップデート確認"
         Exit Sub
@@ -7832,7 +7837,7 @@ Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     answer = MsgBox("新しいDelaxToolsが見つかりました。" & vbCrLf & vbCrLf & _
                     "現在のバージョン: " & currentVersion & vbCrLf & _
                     "最新のバージョン: " & latestVersion & vbCrLf & vbCrLf & _
-                    "インストーラをダウンロードしてアップデートしますか？" & vbCrLf & _
+                    "インストーラーをダウンロードしてアップデートしますか？" & vbCrLf & _
                     "アップデート中はExcelを終了します。", _
                     vbYesNo + vbQuestion, "DelaxTools アップデート確認")
     If answer <> vbYes Then Exit Sub
@@ -7860,17 +7865,17 @@ Public Sub DxaCheckDelaxToolsUpdate(ByVal control As Object)
     psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command " & _
             DxaQuoteForCommand("$ErrorActionPreference='Stop'; " & _
             "New-Item -ItemType Directory -Force -Path " & DxaPsQuote(tempDir) & " | Out-Null; " & _
-            "$urls=@('https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip','https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DelaxToolsInstaller.zip','https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip'); " & _
-            "$ok=$false; $last=''; foreach($u in $urls){ try{ Invoke-WebRequest -Uri $u -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; if(Test-Path " & DxaPsQuote(zipPath) & "){ $ok=$true; break } } catch { $last=$_.Exception.Message } }; if(-not $ok){ throw ('インストーラーZIPをダウンロードできませんでした。' + $last) }; " & _
+            "$urls=@('https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip','https://github.com/Chairman-bits/DelaxTools/raw/main/DelaxToolsInstaller.zip','https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DelaxToolsInstaller.zip','https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip'); " & _
+            "$ok=$false; $last=''; foreach($u in $urls){ try{ Invoke-WebRequest -Uri $u -OutFile " & DxaPsQuote(zipPath) & " -UseBasicParsing; if(Test-Path " & DxaPsQuote(zipPath) & "){ $ok=$true; break } } catch { $last=$_.Exception.Message } }; if(-not $ok){ throw ('Installer download failed. ' + $last) }; " & _
             "Expand-Archive -Path " & DxaPsQuote(zipPath) & " -DestinationPath " & DxaPsQuote(tempDir) & " -Force; " & _
             "$bat = Get-ChildItem -Path " & DxaPsQuote(tempDir) & " -Recurse -Filter 'DelaxTools.bat' | Select-Object -First 1; " & _
-            "if($null -eq $bat){ throw 'DelaxTools.bat が見つかりません。' }; " & _
+            "if($null -eq $bat){ throw 'DelaxTools.bat was not found.' }; " & _
             "Start-Process -FilePath $bat.FullName -ArgumentList '/install' -WorkingDirectory $bat.DirectoryName")
 
     Set sh = CreateObject("WScript.Shell")
     sh.Run psCmd, 0, False
 
-    MsgBox "DelaxToolsのインストーラを起動しました。" & vbCrLf & _
+    MsgBox "DelaxToolsのインストーラーを起動しました。" & vbCrLf & _
            "このあとExcelを終了します。インストール完了後にExcelを再起動してください。", _
            vbInformation, "DelaxTools アップデート確認"
 
@@ -7889,21 +7894,7 @@ Public Sub DxaUpdateDelaxTools(ByVal control As Object)
 End Sub
 
 Private Function DxaTryHandleSecretInstallerDownloadCommand() As Boolean
-    On Error GoTo EH
-
-    If TypeName(Selection) <> "Range" Then Exit Function
-
-    Dim commandText As String
-    commandText = UCase$(Trim$(CStr(ActiveCell.Value)))
-
-    If commandText <> "KO" Then Exit Function
-
-    ActiveCell.ClearContents
-    DxaDownloadLatestInstallerZip
-    DxaTryHandleSecretInstallerDownloadCommand = True
-    Exit Function
-
-EH:
+    ' v186: KOセルによるインストーラー取得処理は削除しました。
     DxaTryHandleSecretInstallerDownloadCommand = False
 End Function
 
@@ -8000,11 +7991,7 @@ End Function
 Private Function DxaGetInstallerDownloadUrls() As Variant
     DxaGetInstallerDownloadUrls = Array( _
         "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip", _
-        "https://github.com/Chairman-bits/DelaxTools/raw/main/DelaxToolsInstaller.zip", _
-        "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DelaxToolsInstaller.zip", _
-        "https://github.com/Chairman-bits/DExcelAssist/raw/main/DelaxToolsInstaller.zip", _
-        "https://raw.githubusercontent.com/Chairman-bits/DExcelAssist/main/DExcelAssistInstaller.zip", _
-        "https://github.com/Chairman-bits/DExcelAssist/raw/main/DExcelAssistInstaller.zip")
+        "https://github.com/Chairman-bits/DelaxTools/raw/main/DelaxToolsInstaller.zip")
 End Function
 
 Private Function DxaGetInstallerDownloadUrl() As String
@@ -8118,13 +8105,7 @@ Private Function DxaLooksLikeVersionText(ByVal versionText As String) As Boolean
         End If
     Next i
 
-    For i = 1 To Len(s)
-        ch = Mid$(s, i, 1)
-        If ch >= "0" And ch <= "9" Then
-            DxaLooksLikeVersionText = True
-            Exit Function
-        End If
-    Next i
+    DxaLooksLikeVersionText = True
 End Function
 
 Private Function DxaNormalizeVersionText(ByVal versionText As String) As String
@@ -8365,13 +8346,121 @@ EH:
 End Function
 
 ' DelaxTools v172
-' リボンには表示しない配布用ZIP作成コマンドです。
-' Excelのマクロ実行、またはショートカット割当から DelaxToolsCreateInstallerZip を実行してください。
-Public Sub DelaxToolsCreateInstallerZip()
-    DxaCreateCurrentInstallerZip Nothing
+' v186: 手動インストーラー取得/作成マクロは削除しました。
+
+
+
+' ============================================================
+' DelaxTools v186
+' リボン非表示制御
+' Ctrl+Shift+K → Ctrl+Shift+O を続けて押した場合だけ、DelaxTools/Backlogタブを表示/非表示にします。
+' ダイアログは表示しません。
+' ============================================================
+Public Sub DxaRibbonLoaded(ByVal ribbon As Object)
+    On Error Resume Next
+    Set gDxaRibbon = ribbon
+    Application.Run "'" & ThisWorkbook.Name & "'!ribbonLoaded", ribbon
 End Sub
 
-Public Sub DelaxToolsDownloadInstaller()
-    DxaDownloadLatestInstallerZip
+Public Sub DxaGetDelaxToolsTabVisible(ByVal control As Object, ByRef returnedVal)
+    On Error GoTo EH
+    returnedVal = DxaIsDelaxToolsRibbonVisible()
+    Exit Sub
+EH:
+    returnedVal = False
 End Sub
 
+Public Sub DxaRegisterStealthRibbonHotKey()
+    On Error Resume Next
+    Application.OnKey "^+k", "DxaStealthRibbonKeyK"
+    Application.OnKey "^+K", "DxaStealthRibbonKeyK"
+    Application.OnKey "^+o", "DxaStealthRibbonKeyO"
+    Application.OnKey "^+O", "DxaStealthRibbonKeyO"
+End Sub
+
+Public Sub DxaUnregisterStealthRibbonHotKey()
+    On Error Resume Next
+    Application.OnKey "^+k"
+    Application.OnKey "^+K"
+    Application.OnKey "^+o"
+    Application.OnKey "^+O"
+    gDxaStealthRibbonKeyStage = vbNullString
+    gDxaStealthRibbonKeyStageAt = 0
+End Sub
+
+Public Sub DxaStealthRibbonKeyK()
+    On Error Resume Next
+    gDxaStealthRibbonKeyStage = "K"
+    gDxaStealthRibbonKeyStageAt = Timer
+End Sub
+
+Public Sub DxaStealthRibbonKeyO()
+    On Error Resume Next
+    If gDxaStealthRibbonKeyStage = "K" Then
+        If DxaSecondsSinceTimer(gDxaStealthRibbonKeyStageAt) <= 5 Then
+            DxaToggleExcelAssistRibbonByHotKey True
+        End If
+    End If
+    gDxaStealthRibbonKeyStage = vbNullString
+    gDxaStealthRibbonKeyStageAt = 0
+End Sub
+
+Private Function DxaSecondsSinceTimer(ByVal startValue As Double) As Double
+    On Error Resume Next
+    If startValue <= 0 Then
+        DxaSecondsSinceTimer = 9999
+    ElseIf Timer >= startValue Then
+        DxaSecondsSinceTimer = Timer - startValue
+    Else
+        DxaSecondsSinceTimer = (86400# - startValue) + Timer
+    End If
+End Function
+
+Public Sub DxaToggleExcelAssistRibbonByHotKey(Optional ByVal silent As Variant)
+    On Error Resume Next
+    Dim nextVisible As Boolean
+    nextVisible = Not DxaIsDelaxToolsRibbonVisible()
+    DxaSetDelaxToolsRibbonVisible nextVisible
+
+    If Not gDxaRibbon Is Nothing Then
+        gDxaRibbon.Invalidate
+    End If
+End Sub
+
+Private Function DxaIsDelaxToolsRibbonVisible() As Boolean
+    On Error GoTo EH
+    Dim p As String
+    p = DxaDelaxToolsRibbonVisibleFlagPath()
+    DxaIsDelaxToolsRibbonVisible = (Dir(p) <> "")
+    Exit Function
+EH:
+    DxaIsDelaxToolsRibbonVisible = False
+End Function
+
+Private Sub DxaSetDelaxToolsRibbonVisible(ByVal visible As Boolean)
+    On Error GoTo EH
+    Dim p As String
+    Dim folder As String
+    Dim f As Integer
+
+    p = DxaDelaxToolsRibbonVisibleFlagPath()
+    folder = Left$(p, InStrRev(p, "\") - 1)
+    If Len(Dir(folder, vbDirectory)) = 0 Then MkDir folder
+
+    If visible Then
+        f = FreeFile
+        Open p For Output As #f
+        Print #f, "visible"
+        Close #f
+    Else
+        If Dir(p) <> "" Then Kill p
+    End If
+    Exit Sub
+EH:
+    On Error Resume Next
+    If f <> 0 Then Close #f
+End Sub
+
+Private Function DxaDelaxToolsRibbonVisibleFlagPath() As String
+    DxaDelaxToolsRibbonVisibleFlagPath = Environ$("APPDATA") & "\DelaxTools\ribbon_visible.dat"
+End Function
