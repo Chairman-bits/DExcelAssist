@@ -1,6 +1,6 @@
 ﻿{
-    "releaseNote":  "DelaxTools installer package",
-    "installerUrl":  "https://raw.githubusercontent.com/Chairman-bits/DelaxTools/main/DelaxToolsInstaller.zip",
-    "name":  "DelaxTools",
-    "version":  "v1.0.7"
+    "releaseNote":  "DExcelAssist installer package",
+    "installerUrl":  "https://raw.githubusercontent.com/184649/DExcelAssist/main/DExcelAssistInstaller.zip",
+    "name":  "DExcelAssist",
+    "version":  "v1.0.8"
 }
